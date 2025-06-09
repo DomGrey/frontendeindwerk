@@ -69,7 +69,7 @@ export default function ClothingPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Clothing</h1>
         <Button
@@ -81,7 +81,7 @@ export default function ClothingPage() {
           Add Item
         </Button>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div

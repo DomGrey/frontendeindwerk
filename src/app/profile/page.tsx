@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
   return (
-    <div className="container py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-8">Profile</h1>
       <div className="max-w-2xl">
         <div className="flex items-center gap-6 mb-8">

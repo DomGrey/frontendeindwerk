@@ -1,11 +1,14 @@
 import { Navigation } from "./navigation";
-import { Button } from "@/components/ui/button";
+import { MobileNav } from "./mobile-nav";
 import { UserNav } from "./user-nav";
 
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center">
+        <div className="flex items-center md:hidden">
+          <MobileNav />
+        </div>
         <div className="mr-4 hidden md:flex">
           <a href="/" className="mr-6 flex items-center space-x-2">
             <span className="hidden font-bold sm:inline-block">

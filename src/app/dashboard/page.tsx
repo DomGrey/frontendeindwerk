@@ -1,9 +1,9 @@
 export default function DashboardPage() {
   return (
-    <div className="container py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border bg-card text-card-foreground shadow">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-lg border bg-card text-card-foreground shadow hover:shadow-lg transition-shadow">
           <div className="p-6">
             <h3 className="font-semibold leading-none tracking-tight">
               My Clothing
@@ -13,7 +13,7 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow">
+        <div className="rounded-lg border bg-card text-card-foreground shadow hover:shadow-lg transition-shadow">
           <div className="p-6">
             <h3 className="font-semibold leading-none tracking-tight">
               My Outfits
@@ -23,7 +23,7 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow">
+        <div className="rounded-lg border bg-card text-card-foreground shadow hover:shadow-lg transition-shadow">
           <div className="p-6">
             <h3 className="font-semibold leading-none tracking-tight">
               Favorites
