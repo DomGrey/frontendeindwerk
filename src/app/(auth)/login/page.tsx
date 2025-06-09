@@ -1,7 +1,71 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/context/auth-context";
+import type { LoginCredentials } from "@/lib/types/api";
 
 export default function LoginPage() {
+  const { login, error, isLoading, clearError } = useAuth();
+  const [formData, setFormData] = useState<LoginCredentials>({
+    email: "",
+    password: "",
+  });
+
+  const [formErrors, setFormErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    }
+
+    setFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+
+    if (validateForm()) {
+      try {
+        await login(formData);
+      } catch (error) {
+        // Error is handled by auth context
+        console.error("Login error:", error);
+      }
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
+  };
+
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
@@ -14,42 +78,55 @@ export default function LoginPage() {
           </p>
         </div>
         <div className="grid gap-6">
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <label
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  htmlFor="email"
-                >
-                  Email
-                </label>
-                <input
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                <Label htmlFor="email">Email</Label>
+                <Input
                   id="email"
+                  name="email"
                   placeholder="name@example.com"
                   type="email"
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect="off"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={formErrors.email ? "border-red-500" : ""}
+                  disabled={isLoading}
                 />
+                {formErrors.email && (
+                  <span className="text-sm text-red-500">
+                    {formErrors.email}
+                  </span>
+                )}
               </div>
               <div className="grid gap-2">
-                <label
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  htmlFor="password"
-                >
-                  Password
-                </label>
-                <input
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                <Label htmlFor="password">Password</Label>
+                <Input
                   id="password"
+                  name="password"
                   type="password"
                   autoCapitalize="none"
                   autoComplete="current-password"
                   autoCorrect="off"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={formErrors.password ? "border-red-500" : ""}
+                  disabled={isLoading}
                 />
+                {formErrors.password && (
+                  <span className="text-sm text-red-500">
+                    {formErrors.password}
+                  </span>
+                )}
               </div>
-              <Button>Sign In</Button>
+              {error && (
+                <div className="text-sm text-red-500 text-center">{error}</div>
+              )}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
             </div>
           </form>
           <div className="relative">
@@ -63,8 +140,12 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="grid gap-2">
-            <Button variant="outline">GitHub</Button>
-            <Button variant="outline">Google</Button>
+            <Button variant="outline" disabled={isLoading}>
+              GitHub
+            </Button>
+            <Button variant="outline" disabled={isLoading}>
+              Google
+            </Button>
           </div>
         </div>
         <p className="px-8 text-center text-sm text-muted-foreground">

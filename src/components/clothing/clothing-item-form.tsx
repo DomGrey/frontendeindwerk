@@ -7,28 +7,66 @@ import { Label } from "@/components/ui/label";
 import { ClothingItem } from "@/lib/types";
 
 interface ClothingItemFormProps {
-  onSubmit: (data: Partial<ClothingItem>) => void;
-  initialData?: Partial<ClothingItem>;
+  item?: ClothingItem;
+  onSubmit: (
+    data: Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
+  ) => void;
+  onCancel: () => void;
+}
+
+interface FormErrors {
+  name?: string;
+  category?: string;
+  color?: string;
+  size?: string;
 }
 
 export function ClothingItemForm({
+  item,
   onSubmit,
-  initialData,
+  onCancel,
 }: ClothingItemFormProps) {
-  const [formData, setFormData] = useState<Partial<ClothingItem>>(
-    initialData || {
-      name: "",
-      category: "",
-      color: "",
-      brand: "",
-      size: "",
-      imageUrl: "",
+  const [formData, setFormData] = useState<
+    Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
+  >({
+    name: item?.name || "",
+    category: item?.category || "",
+    color: item?.color || "",
+    brand: item?.brand || "",
+    size: item?.size || "",
+    imageUrl: item?.imageUrl || "",
+  });
+
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.name?.trim()) {
+      newErrors.name = "Name is required";
     }
-  );
+
+    if (!formData.category?.trim()) {
+      newErrors.category = "Category is required";
+    }
+
+    if (!formData.color?.trim()) {
+      newErrors.color = "Color is required";
+    }
+
+    if (!formData.size?.trim()) {
+      newErrors.size = "Size is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (validateForm()) {
+      onSubmit(formData);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +75,13 @@ export function ClothingItemForm({
       ...prev,
       [name]: value,
     }));
+    // Clear error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
   };
 
   return (
@@ -49,8 +94,11 @@ export function ClothingItemForm({
           value={formData.name}
           onChange={handleChange}
           placeholder="Enter item name"
-          required
+          className={errors.name ? "border-red-500" : ""}
         />
+        {errors.name && (
+          <span className="text-sm text-red-500">{errors.name}</span>
+        )}
       </div>
 
       <div>
@@ -61,8 +109,11 @@ export function ClothingItemForm({
           value={formData.category}
           onChange={handleChange}
           placeholder="Enter category"
-          required
+          className={errors.category ? "border-red-500" : ""}
         />
+        {errors.category && (
+          <span className="text-sm text-red-500">{errors.category}</span>
+        )}
       </div>
 
       <div>
@@ -73,8 +124,11 @@ export function ClothingItemForm({
           value={formData.color}
           onChange={handleChange}
           placeholder="Enter color"
-          required
+          className={errors.color ? "border-red-500" : ""}
         />
+        {errors.color && (
+          <span className="text-sm text-red-500">{errors.color}</span>
+        )}
       </div>
 
       <div>
@@ -82,7 +136,7 @@ export function ClothingItemForm({
         <Input
           id="brand"
           name="brand"
-          value={formData.brand}
+          value={formData.brand || ""}
           onChange={handleChange}
           placeholder="Enter brand"
         />
@@ -96,8 +150,11 @@ export function ClothingItemForm({
           value={formData.size}
           onChange={handleChange}
           placeholder="Enter size"
-          required
+          className={errors.size ? "border-red-500" : ""}
         />
+        {errors.size && (
+          <span className="text-sm text-red-500">{errors.size}</span>
+        )}
       </div>
 
       <div>
@@ -111,9 +168,12 @@ export function ClothingItemForm({
         />
       </div>
 
-      <Button type="submit" className="w-full">
-        {initialData ? "Update Item" : "Add Item"}
-      </Button>
+      <div className="flex gap-2 justify-end">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">{item ? "Update Item" : "Add Item"}</Button>
+      </div>
     </form>
   );
 }

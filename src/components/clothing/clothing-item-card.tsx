@@ -3,6 +3,7 @@
 import { ClothingItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 
 interface ClothingItemCardProps {
   item: ClothingItem;
@@ -18,11 +19,18 @@ export function ClothingItemCard({
   return (
     <div className="group relative rounded-lg border bg-card text-card-foreground shadow transition-shadow hover:shadow-lg">
       <div className="relative aspect-square overflow-hidden rounded-t-lg">
-        <img
-          src={item.imageUrl}
-          alt={item.name}
-          className="object-cover transition-transform group-hover:scale-105"
-        />
+        {item.imageUrl ? (
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            fill
+            className="object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="h-full w-full bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground">No image</span>
+          </div>
+        )}
         {onFavorite && (
           <Button
             variant="ghost"

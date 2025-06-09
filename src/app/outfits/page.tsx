@@ -6,18 +6,32 @@ import { OutfitCard } from "@/components/outfit/outfit-card";
 import { OutfitDialog } from "@/components/outfit/outfit-dialog";
 import { Outfit } from "@/lib/types";
 import { getOutfits, createOutfit } from "@/lib/api/outfits";
+import { useAuth } from "@/lib/context/auth-context";
+import type { Outfit as ApiOutfit } from "@/lib/types/api";
 
 export default function OutfitsPage() {
+  const { token } = useAuth();
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | undefined>();
 
+  const transformApiOutfit = (apiOutfit: ApiOutfit): Outfit => ({
+    id: apiOutfit.id,
+    name: apiOutfit.name,
+    description: apiOutfit.description,
+    clothingItemIds: apiOutfit.clothing_items?.map((item) => item.id) || [],
+    userId: apiOutfit.user_id,
+    createdAt: apiOutfit.created_at,
+    updatedAt: apiOutfit.updated_at,
+  });
+
   useEffect(() => {
     const fetchOutfits = async () => {
       try {
-        const data = await getOutfits();
-        setOutfits(data);
+        if (!token) return;
+        const response = await getOutfits(token);
+        setOutfits(response.outfits.map(transformApiOutfit));
       } catch (error) {
         console.error("Failed to fetch outfits:", error);
       } finally {
@@ -26,14 +40,20 @@ export default function OutfitsPage() {
     };
 
     fetchOutfits();
-  }, []);
+  }, [token]);
 
   const handleCreateOutfit = async (
     data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
   ) => {
     try {
-      const newOutfit = await createOutfit(data);
-      setOutfits((prev) => [...prev, newOutfit]);
+      if (!token) return;
+      const newOutfit = await createOutfit(token, {
+        name: data.name,
+        description: data.description,
+        is_public: false,
+        clothing_item_ids: data.clothingItemIds,
+      });
+      setOutfits((prev) => [...prev, transformApiOutfit(newOutfit)]);
       setDialogOpen(false);
     } catch (error) {
       console.error("Failed to create outfit:", error);

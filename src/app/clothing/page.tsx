@@ -6,18 +6,37 @@ import { ClothingItemCard } from "@/components/clothing/clothing-item-card";
 import { ClothingItemDialog } from "@/components/clothing/clothing-item-dialog";
 import { ClothingItem } from "@/lib/types";
 import { getClothingItems, createClothingItem } from "@/lib/api/clothing";
+import { useAuth } from "@/lib/context/auth-context";
+import type { ClothingItem as ApiClothingItem } from "@/lib/types/api";
 
 export default function ClothingPage() {
+  const { token } = useAuth();
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
 
+  const transformApiClothingItem = (
+    apiItem: ApiClothingItem
+  ): ClothingItem => ({
+    id: apiItem.id,
+    name: apiItem.name,
+    size: apiItem.size,
+    imageUrl: apiItem.image_url || "",
+    category: apiItem.category,
+    color: apiItem.color,
+    brand: apiItem.brand,
+    userId: apiItem.user_id,
+    createdAt: apiItem.created_at,
+    updatedAt: apiItem.updated_at,
+  });
+
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const data = await getClothingItems();
-        setItems(data);
+        if (!token) return;
+        const data = await getClothingItems(token);
+        setItems(data.map(transformApiClothingItem));
       } catch (error) {
         console.error("Failed to fetch clothing items:", error);
       } finally {
@@ -26,14 +45,23 @@ export default function ClothingPage() {
     };
 
     fetchItems();
-  }, []);
+  }, [token]);
 
   const handleAddItem = async (
     data: Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
   ) => {
     try {
-      const newItem = await createClothingItem(data);
-      setItems((prev) => [...prev, newItem]);
+      if (!token) return;
+      const newItem = await createClothingItem(token, {
+        name: data.name,
+        size: data.size,
+        category: data.category,
+        color: data.color,
+        brand: data.brand,
+        season: "all", // Default value since it's required by API
+        is_public: false,
+      });
+      setItems((prev) => [...prev, transformApiClothingItem(newItem)]);
       setDialogOpen(false);
     } catch (error) {
       console.error("Failed to create clothing item:", error);
