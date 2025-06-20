@@ -6,6 +6,7 @@ import { OutfitCard } from "@/components/outfit/outfit-card";
 import { ClothingItem, Outfit } from "@/lib/types";
 import { getFavorites, removeFavorite } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
+import { toast } from "react-toastify";
 import type { Favorite as ApiFavorite } from "@/lib/types/api";
 
 export function FavoritesPageClient() {
@@ -20,16 +21,69 @@ export function FavoritesPageClient() {
       try {
         if (!token) return;
         const data = await getFavorites(token);
-        const transformedFavorites = data.map((favorite: ApiFavorite) => ({
-          ...favorite.favoritable,
-          type:
-            favorite.favoritable_type === "App\\Models\\ClothingItem"
-              ? "clothing"
-              : "outfit",
-        }));
+
+        console.log("Raw favorites data:", data);
+
+        const transformedFavorites = data
+          .map((favorite: ApiFavorite) => {
+            const favoritable = favorite.favoritable;
+
+            if (!favoritable) {
+              console.warn("Missing favoritable data for favorite:", favorite);
+              return null;
+            }
+
+            // Use includes() to check for the type more flexibly
+            const favoritableType = favorite.favoritable_type;
+            console.log("Processing favoritable type:", favoritableType);
+
+            if (favoritableType.includes("ClothingItem")) {
+              // Transform clothing item data
+              const clothingItem: ClothingItem & { type: "clothing" } = {
+                id: favoritable.id,
+                name: favoritable.name || "Unknown Item",
+                size: favoritable.size || "",
+                imageUrl: favoritable.image_path || favoritable.image_url || "",
+                category: favoritable.category || "",
+                color: favoritable.color || "",
+                brand: favoritable.brand || "",
+                userId: favoritable.user_id || 0,
+                createdAt: favoritable.created_at || "",
+                updatedAt: favoritable.updated_at || "",
+                type: "clothing",
+              };
+              console.log("Transformed clothing item:", clothingItem);
+              return clothingItem;
+            } else if (favoritableType.includes("Outfit")) {
+              // Transform outfit data
+              const outfit: Outfit & { type: "outfit" } = {
+                id: favoritable.id,
+                name: favoritable.name || "Unknown Outfit",
+                description: favoritable.description || "",
+                clothingItemIds:
+                  favoritable.clothing_items?.map((item: any) => item.id) || [],
+                userId: favoritable.user_id || 0,
+                createdAt: favoritable.created_at || "",
+                updatedAt: favoritable.updated_at || "",
+                type: "outfit",
+              };
+              console.log("Transformed outfit:", outfit);
+              return outfit;
+            }
+
+            console.warn(
+              "Unknown favoritable type:",
+              favorite.favoritable_type
+            );
+            return null;
+          })
+          .filter(Boolean); // Remove null items
+
+        console.log("Final transformed favorites:", transformedFavorites);
         setFavorites(transformedFavorites);
       } catch (error) {
         console.error("Failed to fetch favorites:", error);
+        toast.error("Failed to load favorites");
       } finally {
         setLoading(false);
       }
@@ -44,12 +98,22 @@ export function FavoritesPageClient() {
   ) => {
     try {
       if (!token) return;
-      await removeFavorite(token, id, type);
+
+      const favoritableType = type === "clothing" ? "clothing_item" : "outfit";
+
+      await removeFavorite(token, {
+        favoritable_id: id,
+        favoritable_type: favoritableType,
+      });
+
       setFavorites((prev) =>
         prev.filter((item) => item.id !== id || item.type !== type)
       );
+
+      toast.success("Removed from favorites");
     } catch (error) {
       console.error("Failed to remove favorite:", error);
+      toast.error("Failed to remove from favorites");
     }
   };
 
@@ -83,12 +147,14 @@ export function FavoritesPageClient() {
                 key={`clothing-${item.id}`}
                 item={item as ClothingItem}
                 onFavorite={() => handleRemoveFavorite(item.id, "clothing")}
+                isFavorited={true}
               />
             ) : (
               <OutfitCard
                 key={`outfit-${item.id}`}
                 outfit={item as Outfit}
                 onFavorite={() => handleRemoveFavorite(item.id, "outfit")}
+                isFavorited={true}
               />
             )
           )

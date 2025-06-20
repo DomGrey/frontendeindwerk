@@ -115,7 +115,7 @@ export interface CreateOutfitData {
 }
 
 // Favorite types
-export type FavoriteType = "App\\Models\\ClothingItem" | "App\\Models\\Outfit";
+export type FavoriteType = "clothing_item" | "outfit";
 
 export interface Favorite {
   id: number;

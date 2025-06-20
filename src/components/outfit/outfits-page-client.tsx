@@ -6,12 +6,14 @@ import { OutfitCard } from "@/components/outfit/outfit-card";
 import { OutfitDialog } from "@/components/outfit/outfit-dialog";
 import { Outfit } from "@/lib/types";
 import { getOutfits, createOutfit } from "@/lib/api/outfits";
+import { getFavoriteOutfits } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import type { Outfit as ApiOutfit } from "@/lib/types/api";
 
 export function OutfitsPageClient() {
   const { token } = useAuth();
   const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const [favoritedIds, setFavoritedIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | undefined>();
@@ -27,19 +29,31 @@ export function OutfitsPageClient() {
   });
 
   useEffect(() => {
-    const fetchOutfits = async () => {
+    const fetchData = async () => {
       try {
         if (!token) return;
-        const response = await getOutfits(token);
-        setOutfits(response.outfits.map(transformApiOutfit));
+
+        // Fetch outfits and favorites in parallel
+        const [outfitsResponse, favoritesData] = await Promise.all([
+          getOutfits(token),
+          getFavoriteOutfits(token),
+        ]);
+
+        setOutfits(outfitsResponse.outfits.map(transformApiOutfit));
+
+        // Extract favorited outfit IDs
+        const favoritedIdsSet = new Set(
+          favoritesData.map((favorite: any) => favorite.favoritable_id)
+        );
+        setFavoritedIds(favoritedIdsSet);
       } catch (error) {
-        console.error("Failed to fetch outfits:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOutfits();
+    fetchData();
   }, [token]);
 
   const handleCreateOutfit = async (
@@ -58,6 +72,30 @@ export function OutfitsPageClient() {
     } catch (error) {
       console.error("Failed to create outfit:", error);
     }
+  };
+
+  const handleFavorite = (outfitId: number, isFavorited: boolean) => {
+    // Update local state optimistically
+    setFavoritedIds((prev) => {
+      const newSet = new Set(prev);
+      if (isFavorited) {
+        newSet.add(outfitId);
+      } else {
+        newSet.delete(outfitId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleDelete = (outfitId: number) => {
+    // Remove outfit from UI immediately (optimistic update)
+    setOutfits((prev) => prev.filter((outfit) => outfit.id !== outfitId));
+    // Also remove from favorites if it was favorited
+    setFavoritedIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(outfitId);
+      return newSet;
+    });
   };
 
   return (
@@ -91,12 +129,11 @@ export function OutfitsPageClient() {
               <OutfitCard
                 key={outfit.id}
                 outfit={outfit}
-                onFavorite={() => {
-                  console.log("Favorite:", outfit.id);
-                }}
-                onDelete={() => {
-                  console.log("Delete:", outfit.id);
-                }}
+                onFavorite={(isFavorited) =>
+                  handleFavorite(outfit.id, isFavorited)
+                }
+                onDelete={() => handleDelete(outfit.id)}
+                isFavorited={favoritedIds.has(outfit.id)}
               />
             ))}
       </div>

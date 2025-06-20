@@ -6,12 +6,14 @@ import { ClothingItemCard } from "@/components/clothing/clothing-item-card";
 import { ClothingItemDialog } from "@/components/clothing/clothing-item-dialog";
 import { ClothingItem } from "@/lib/types";
 import { getClothingItems, createClothingItem } from "@/lib/api/clothing";
+import { getFavoriteClothingItems } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import type { ClothingItem as ApiClothingItem } from "@/lib/types/api";
 
 export function ClothingPageClient() {
   const { token } = useAuth();
   const [items, setItems] = useState<ClothingItem[]>([]);
+  const [favoritedIds, setFavoritedIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
@@ -32,19 +34,45 @@ export function ClothingPageClient() {
   });
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchData = async () => {
       try {
         if (!token) return;
-        const data = await getClothingItems(token);
-        setItems(data.map(transformApiClothingItem));
+
+        // Fetch clothing items and favorites in parallel
+        const [clothingData, favoritesData] = await Promise.all([
+          getClothingItems(token),
+          getFavoriteClothingItems(token),
+        ]);
+
+        setItems(clothingData.map(transformApiClothingItem));
+
+        // Extract favorited item IDs
+        let favoritedIdsSet = new Set<number>();
+
+        if (Array.isArray(favoritesData)) {
+          favoritedIdsSet = new Set(
+            favoritesData
+              .map((favorite: any) => {
+                if (favorite.favoritable_id) {
+                  return favorite.favoritable_id;
+                } else if (favorite.id) {
+                  return favorite.id;
+                }
+                return null;
+              })
+              .filter(Boolean)
+          );
+        }
+
+        setFavoritedIds(favoritedIdsSet);
       } catch (error) {
-        console.error("Failed to fetch clothing items:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItems();
+    fetchData();
   }, [token]);
 
   const handleAddItem = async (
@@ -66,6 +94,30 @@ export function ClothingPageClient() {
     } catch (error) {
       console.error("Failed to create clothing item:", error);
     }
+  };
+
+  const handleFavorite = (itemId: number, isFavorited: boolean) => {
+    // Update local state optimistically
+    setFavoritedIds((prev) => {
+      const newSet = new Set(prev);
+      if (isFavorited) {
+        newSet.add(itemId);
+      } else {
+        newSet.delete(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleDelete = (itemId: number) => {
+    // Remove item from UI immediately (optimistic update)
+    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    // Also remove from favorites if it was favorited
+    setFavoritedIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(itemId);
+      return newSet;
+    });
   };
 
   return (
@@ -99,12 +151,11 @@ export function ClothingPageClient() {
               <ClothingItemCard
                 key={item.id}
                 item={item}
-                onFavorite={() => {
-                  console.log("Favorite:", item.id);
-                }}
-                onDelete={() => {
-                  console.log("Delete:", item.id);
-                }}
+                onFavorite={(isFavorited) =>
+                  handleFavorite(item.id, isFavorited)
+                }
+                onDelete={() => handleDelete(item.id)}
+                isFavorited={favoritedIds.has(item.id)}
               />
             ))}
       </div>
