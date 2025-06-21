@@ -70,7 +70,6 @@ export function ClothingItemForm({
       formData.append("size", size);
       if (brand) formData.append("brand", brand);
       formData.append("season", "all"); // default value
-      formData.append("is_public", "false"); // default value
 
       if (image instanceof File) {
         formData.append("image", image);

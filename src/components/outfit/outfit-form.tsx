@@ -10,9 +10,15 @@ interface OutfitFormProps {
     data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
   ) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-export function OutfitForm({ outfit, onSubmit, onCancel }: OutfitFormProps) {
+export function OutfitForm({
+  outfit,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+}: OutfitFormProps) {
   const [formData, setFormData] = useState({
     name: outfit?.name || "",
     description: outfit?.description || "",
@@ -81,12 +87,21 @@ export function OutfitForm({ outfit, onSubmit, onCancel }: OutfitFormProps) {
           </Button>
         </div>
       </div>
-      <div className="flex gap-2 justify-end">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex gap-2 justify-end pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
-        <Button type="submit">
-          {outfit ? "Update Outfit" : "Create Outfit"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting
+            ? "Saving..."
+            : outfit
+            ? "Update Outfit"
+            : "Create Outfit"}
         </Button>
       </div>
     </form>

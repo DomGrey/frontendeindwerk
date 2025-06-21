@@ -17,6 +17,7 @@ interface OutfitDialogProps {
   onSubmit: (
     data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
   ) => void;
+  isSubmitting?: boolean;
 }
 
 export function OutfitDialog({
@@ -24,10 +25,11 @@ export function OutfitDialog({
   onOpenChange,
   outfit,
   onSubmit,
+  isSubmitting,
 }: OutfitDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{outfit ? "Edit Outfit" : "Create Outfit"}</DialogTitle>
           <DialogDescription>
@@ -40,6 +42,7 @@ export function OutfitDialog({
           outfit={outfit}
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

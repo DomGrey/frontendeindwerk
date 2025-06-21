@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { OutfitCard } from "@/components/outfit/outfit-card";
 import { OutfitDialog } from "@/components/outfit/outfit-dialog";
 import { Outfit } from "@/lib/types";
-import { getOutfits, createOutfit } from "@/lib/api/outfits";
+import { getOutfits, createOutfit, updateOutfit } from "@/lib/api/outfits";
 import { getFavoriteOutfits } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
+import { toast } from "react-toastify";
 import type { Outfit as ApiOutfit } from "@/lib/types/api";
 
 export function OutfitsPageClient() {
@@ -17,6 +18,7 @@ export function OutfitsPageClient() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const transformApiOutfit = (apiOutfit: ApiOutfit): Outfit => ({
     id: apiOutfit.id,
@@ -33,7 +35,6 @@ export function OutfitsPageClient() {
       try {
         if (!token) return;
 
-        // Fetch outfits and favorites in parallel
         const [outfitsResponse, favoritesData] = await Promise.all([
           getOutfits(token),
           getFavoriteOutfits(token),
@@ -41,10 +42,23 @@ export function OutfitsPageClient() {
 
         setOutfits(outfitsResponse.outfits.map(transformApiOutfit));
 
-        // Extract favorited outfit IDs
-        const favoritedIdsSet = new Set(
-          favoritesData.map((favorite: any) => favorite.favoritable_id)
-        );
+        let favoritedIdsSet = new Set<number>();
+
+        if (Array.isArray(favoritesData)) {
+          favoritedIdsSet = new Set(
+            favoritesData
+              .map((favorite: any) => {
+                if (favorite.favoritable_id) {
+                  return favorite.favoritable_id;
+                } else if (favorite.id) {
+                  return favorite.id;
+                }
+                return null;
+              })
+              .filter(Boolean)
+          );
+        }
+
         setFavoritedIds(favoritedIdsSet);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -56,26 +70,58 @@ export function OutfitsPageClient() {
     fetchData();
   }, [token]);
 
-  const handleCreateOutfit = async (
+  const handleFormSubmit = async (
     data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
   ) => {
+    if (!token) {
+      toast.error("You must be logged in.");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      if (!token) return;
-      const newOutfit = await createOutfit(token, {
-        name: data.name,
-        description: data.description,
-        is_public: false,
-        clothing_item_ids: data.clothingItemIds,
-      });
-      setOutfits((prev) => [...prev, transformApiOutfit(newOutfit)]);
+      if (selectedOutfit) {
+        // Update existing outfit
+        const updatedOutfit: ApiOutfit = await updateOutfit(
+          token,
+          selectedOutfit.id,
+          {
+            name: data.name,
+            description: data.description,
+            is_public: false,
+            clothing_item_ids: data.clothingItemIds,
+          }
+        );
+        setOutfits(
+          outfits.map((it) =>
+            it.id === selectedOutfit.id ? transformApiOutfit(updatedOutfit) : it
+          )
+        );
+        toast.success("Outfit updated successfully");
+      } else {
+        // Create new outfit
+        const newOutfit: ApiOutfit = await createOutfit(token, {
+          name: data.name,
+          description: data.description,
+          is_public: false,
+          clothing_item_ids: data.clothingItemIds,
+        });
+        setOutfits((prev) => [...prev, transformApiOutfit(newOutfit)]);
+        toast.success("Outfit created successfully");
+      }
       setDialogOpen(false);
+      setSelectedOutfit(undefined);
     } catch (error) {
-      console.error("Failed to create outfit:", error);
+      console.error("Failed to save outfit:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save outfit.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleFavorite = (outfitId: number, isFavorited: boolean) => {
-    // Update local state optimistically
     setFavoritedIds((prev) => {
       const newSet = new Set(prev);
       if (isFavorited) {
@@ -88,9 +134,7 @@ export function OutfitsPageClient() {
   };
 
   const handleDelete = (outfitId: number) => {
-    // Remove outfit from UI immediately (optimistic update)
     setOutfits((prev) => prev.filter((outfit) => outfit.id !== outfitId));
-    // Also remove from favorites if it was favorited
     setFavoritedIds((prev) => {
       const newSet = new Set(prev);
       newSet.delete(outfitId);
@@ -98,18 +142,21 @@ export function OutfitsPageClient() {
     });
   };
 
+  const openAddDialog = () => {
+    setSelectedOutfit(undefined);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (outfit: Outfit) => {
+    setSelectedOutfit(outfit);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Outfits</h1>
-        <Button
-          onClick={() => {
-            setSelectedOutfit(undefined);
-            setDialogOpen(true);
-          }}
-        >
-          Create Outfit
-        </Button>
+        <Button onClick={openAddDialog}>Create Outfit</Button>
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {loading
@@ -126,22 +173,33 @@ export function OutfitsPageClient() {
               </div>
             ))
           : outfits.map((outfit) => (
-              <OutfitCard
+              <div
                 key={outfit.id}
-                outfit={outfit}
-                onFavorite={(isFavorited) =>
-                  handleFavorite(outfit.id, isFavorited)
-                }
-                onDelete={() => handleDelete(outfit.id)}
-                isFavorited={favoritedIds.has(outfit.id)}
-              />
+                onClick={() => openEditDialog(outfit)}
+                className="cursor-pointer"
+              >
+                <OutfitCard
+                  outfit={outfit}
+                  onFavorite={(isFavorited) =>
+                    handleFavorite(outfit.id, isFavorited)
+                  }
+                  onDelete={() => handleDelete(outfit.id)}
+                  isFavorited={favoritedIds.has(outfit.id)}
+                />
+              </div>
             ))}
       </div>
       <OutfitDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setSelectedOutfit(undefined);
+          }
+          setDialogOpen(isOpen);
+        }}
         outfit={selectedOutfit}
-        onSubmit={handleCreateOutfit}
+        onSubmit={handleFormSubmit}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

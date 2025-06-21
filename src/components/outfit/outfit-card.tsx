@@ -12,23 +12,24 @@ import { useAuth } from "@/lib/context/auth-context";
 
 interface OutfitCardProps {
   outfit: Outfit;
-  onFavorite?: (isFavorited: boolean) => void;
-  onDelete?: () => void;
-  isFavorited?: boolean;
+  onFavorite: (isFavorited: boolean) => void;
+  onDelete: () => void;
+  isFavorited: boolean;
 }
 
 export function OutfitCard({
   outfit,
   onFavorite,
   onDelete,
-  isFavorited = false,
+  isFavorited,
 }: OutfitCardProps) {
   const { token } = useAuth();
   const { toggleFavorite, isLoading: isFavoriteLoading } = useFavorites();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleFavorite = async () => {
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening edit dialog
     if (!token) return;
 
     const newFavoritedState = await toggleFavorite(
@@ -53,21 +54,7 @@ export function OutfitCard({
         onDelete();
       }
     } catch (error) {
-      console.error("Delete error:", error);
-
-      if (error instanceof Error) {
-        if (error.message.includes("403")) {
-          toast.error("You don't have permission to delete this outfit");
-        } else if (error.message.includes("404")) {
-          toast.error("Outfit not found");
-        } else if (error.message.includes("401")) {
-          toast.error("Please log in again");
-        } else {
-          toast.error(error.message || "Failed to delete outfit");
-        }
-      } else {
-        toast.error("Failed to delete outfit");
-      }
+      toast.error("Failed to delete outfit");
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -76,7 +63,7 @@ export function OutfitCard({
 
   return (
     <>
-      <div className="group relative rounded-lg border bg-card text-card-foreground shadow transition-shadow hover:shadow-lg">
+      <div className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-2">
         <div className="relative aspect-[4/3] overflow-hidden rounded-t-lg bg-muted">
           <div className="grid h-full grid-cols-2 gap-1 p-2">
             {/* Placeholder for outfit items */}
@@ -87,12 +74,14 @@ export function OutfitCard({
               />
             ))}
           </div>
-          <div className="absolute right-2 top-2 flex gap-1">
+
+          {/* Always visible action buttons */}
+          <div className="absolute right-2 top-2 z-10 flex flex-col items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full bg-background/80 backdrop-blur hover:bg-background/90"
               onClick={handleFavorite}
+              className="h-8 w-8 rounded-full bg-background/80 backdrop-blur hover:bg-background/90"
               disabled={isFavoriteLoading(outfit.id, "outfit")}
             >
               <Heart
@@ -103,11 +92,15 @@ export function OutfitCard({
                 }`}
               />
             </Button>
+
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-full bg-background/80 backdrop-blur hover:bg-background/90 hover:text-red-500"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteDialog(true);
+              }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
