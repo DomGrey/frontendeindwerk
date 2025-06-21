@@ -19,6 +19,7 @@ export const getOutfits = async (
   if (perPage) {
     queryParams.append("per_page", perPage.toString());
   }
+  queryParams.append("user_id", "me");
 
   const response = await fetch(`${API_BASE_URL}/outfits?${queryParams}`, {
     headers: getHeaders(token),

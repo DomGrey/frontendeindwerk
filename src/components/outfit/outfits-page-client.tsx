@@ -113,9 +113,22 @@ export function OutfitsPageClient() {
       setSelectedOutfit(undefined);
     } catch (error) {
       console.error("Failed to save outfit:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to save outfit.";
-      toast.error(errorMessage);
+
+      // Handle specific error types
+      if (error instanceof Error) {
+        if (
+          error.message.includes("403") ||
+          error.message.includes("unauthorized")
+        ) {
+          toast.error(
+            "You don't have permission to edit this outfit. This outfit may not belong to your account."
+          );
+        } else {
+          toast.error(error.message || "Failed to save outfit");
+        }
+      } else {
+        toast.error("Failed to save outfit");
+      }
     } finally {
       setIsSubmitting(false);
     }
