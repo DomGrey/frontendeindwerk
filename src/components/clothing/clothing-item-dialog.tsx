@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { ClothingItemForm } from "./clothing-item-form";
 
@@ -14,9 +13,8 @@ interface ClothingItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item?: ClothingItem;
-  onSubmit: (
-    data: Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
-  ) => void;
+  onSubmit: (data: FormData) => void;
+  isSubmitting?: boolean;
 }
 
 export function ClothingItemDialog({
@@ -24,24 +22,21 @@ export function ClothingItemDialog({
   onOpenChange,
   item,
   onSubmit,
+  isSubmitting,
 }: ClothingItemDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {item ? "Edit Clothing Item" : "Add Clothing Item"}
+            {item ? "Edit Clothing Item" : "Add New Clothing Item"}
           </DialogTitle>
-          <DialogDescription>
-            {item
-              ? "Update your clothing item details below."
-              : "Add a new clothing item by filling out the form below."}
-          </DialogDescription>
         </DialogHeader>
         <ClothingItemForm
           item={item}
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

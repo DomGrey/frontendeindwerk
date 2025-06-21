@@ -82,25 +82,8 @@ export const searchClothingItems = async (
 
 export const createClothingItem = async (
   token: string,
-  itemData: CreateClothingItemData
+  formData: FormData
 ): Promise<ClothingItem> => {
-  const formData = new FormData();
-
-  // Append all text fields
-  Object.entries(itemData).forEach(([key, value]) => {
-    if (value !== undefined && !(value instanceof File)) {
-      formData.append(key, value.toString());
-    }
-  });
-
-  // Append files if present
-  if (itemData.image) {
-    formData.append("image", itemData.image);
-  }
-  if (itemData.care_label) {
-    formData.append("care_label", itemData.care_label);
-  }
-
   const response = await fetch(`${API_BASE_URL}/clothing-items`, {
     method: "POST",
     headers: getMultipartHeaders(token),
@@ -144,27 +127,15 @@ export const getClothingItem = async (
 export const updateClothingItem = async (
   token: string,
   id: number,
-  itemData: Partial<CreateClothingItemData>
+  formData: FormData
 ): Promise<ClothingItem> => {
-  const formData = new FormData();
-
-  // Append all text fields
-  Object.entries(itemData).forEach(([key, value]) => {
-    if (value !== undefined && !(value instanceof File)) {
-      formData.append(key, value.toString());
-    }
-  });
-
-  // Append files if present
-  if (itemData.image) {
-    formData.append("image", itemData.image);
-  }
-  if (itemData.care_label) {
-    formData.append("care_label", itemData.care_label);
+  // Laravel needs this to handle PUT with FormData
+  if (!formData.has("_method")) {
+    formData.append("_method", "PUT");
   }
 
   const response = await fetch(`${API_BASE_URL}/clothing-items/${id}`, {
-    method: "PUT",
+    method: "POST", // Use POST for FormData with _method
     headers: getMultipartHeaders(token),
     body: formData,
   });

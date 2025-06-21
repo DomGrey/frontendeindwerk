@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ClothingItemCard } from "@/components/clothing/clothing-item-card";
 import { ClothingItemDialog } from "@/components/clothing/clothing-item-dialog";
 import { ClothingItem } from "@/lib/types";
-import { getClothingItems, createClothingItem } from "@/lib/api/clothing";
+import {
+  getClothingItems,
+  createClothingItem,
+  updateClothingItem,
+} from "@/lib/api/clothing";
 import { getFavoriteClothingItems } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
+import { toast } from "react-toastify";
 import type { ClothingItem as ApiClothingItem } from "@/lib/types/api";
 
 export function ClothingPageClient() {
@@ -17,6 +22,7 @@ export function ClothingPageClient() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const transformApiClothingItem = (
     apiItem: ApiClothingItem
@@ -38,7 +44,6 @@ export function ClothingPageClient() {
       try {
         if (!token) return;
 
-        // Fetch clothing items and favorites in parallel
         const [clothingData, favoritesData] = await Promise.all([
           getClothingItems(token),
           getFavoriteClothingItems(token),
@@ -46,7 +51,6 @@ export function ClothingPageClient() {
 
         setItems(clothingData.map(transformApiClothingItem));
 
-        // Extract favorited item IDs
         let favoritedIdsSet = new Set<number>();
 
         if (Array.isArray(favoritesData)) {
@@ -75,29 +79,49 @@ export function ClothingPageClient() {
     fetchData();
   }, [token]);
 
-  const handleAddItem = async (
-    data: Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
-  ) => {
+  const handleFormSubmit = async (formData: FormData) => {
+    if (!token) {
+      toast.error("You must be logged in.");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      if (!token) return;
-      const newItem = await createClothingItem(token, {
-        name: data.name,
-        size: data.size,
-        category: data.category,
-        color: data.color,
-        brand: data.brand,
-        season: "all",
-        is_public: false,
-      });
-      setItems((prev) => [...prev, transformApiClothingItem(newItem)]);
+      if (selectedItem) {
+        const updatedItem: ApiClothingItem = await updateClothingItem(
+          token,
+          selectedItem.id,
+          formData
+        );
+        setItems(
+          items.map((it) =>
+            it.id === selectedItem.id
+              ? transformApiClothingItem(updatedItem)
+              : it
+          )
+        );
+        toast.success("Clothing item updated successfully");
+      } else {
+        const newItem: ApiClothingItem = await createClothingItem(
+          token,
+          formData
+        );
+        setItems((prev) => [...prev, transformApiClothingItem(newItem)]);
+        toast.success("Clothing item added successfully");
+      }
       setDialogOpen(false);
+      setSelectedItem(undefined);
     } catch (error) {
-      console.error("Failed to create clothing item:", error);
+      console.error("Failed to save clothing item:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save item.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleFavorite = (itemId: number, isFavorited: boolean) => {
-    // Update local state optimistically
     setFavoritedIds((prev) => {
       const newSet = new Set(prev);
       if (isFavorited) {
@@ -110,9 +134,7 @@ export function ClothingPageClient() {
   };
 
   const handleDelete = (itemId: number) => {
-    // Remove item from UI immediately (optimistic update)
     setItems((prev) => prev.filter((item) => item.id !== itemId));
-    // Also remove from favorites if it was favorited
     setFavoritedIds((prev) => {
       const newSet = new Set(prev);
       newSet.delete(itemId);
@@ -120,18 +142,21 @@ export function ClothingPageClient() {
     });
   };
 
+  const openAddDialog = () => {
+    setSelectedItem(undefined);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (item: ClothingItem) => {
+    setSelectedItem(item);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Clothing</h1>
-        <Button
-          onClick={() => {
-            setSelectedItem(undefined);
-            setDialogOpen(true);
-          }}
-        >
-          Add Item
-        </Button>
+        <Button onClick={openAddDialog}>Add Item</Button>
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {loading
@@ -148,22 +173,33 @@ export function ClothingPageClient() {
               </div>
             ))
           : items.map((item) => (
-              <ClothingItemCard
+              <div
                 key={item.id}
-                item={item}
-                onFavorite={(isFavorited) =>
-                  handleFavorite(item.id, isFavorited)
-                }
-                onDelete={() => handleDelete(item.id)}
-                isFavorited={favoritedIds.has(item.id)}
-              />
+                onClick={() => openEditDialog(item)}
+                className="cursor-pointer"
+              >
+                <ClothingItemCard
+                  item={item}
+                  onFavorite={(isFavorited) =>
+                    handleFavorite(item.id, isFavorited)
+                  }
+                  onDelete={() => handleDelete(item.id)}
+                  isFavorited={favoritedIds.has(item.id)}
+                />
+              </div>
             ))}
       </div>
       <ClothingItemDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setSelectedItem(undefined);
+          }
+          setDialogOpen(isOpen);
+        }}
         item={selectedItem}
-        onSubmit={handleAddItem}
+        onSubmit={handleFormSubmit}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

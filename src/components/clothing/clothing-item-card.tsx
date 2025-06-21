@@ -13,23 +13,24 @@ import { useAuth } from "@/lib/context/auth-context";
 
 interface ClothingItemCardProps {
   item: ClothingItem;
-  onFavorite?: (isFavorited: boolean) => void;
-  onDelete?: () => void;
-  isFavorited?: boolean;
+  onFavorite: (isFavorited: boolean) => void;
+  onDelete: () => void;
+  isFavorited: boolean;
 }
 
 export function ClothingItemCard({
   item,
   onFavorite,
   onDelete,
-  isFavorited = false,
+  isFavorited,
 }: ClothingItemCardProps) {
   const { token } = useAuth();
   const { toggleFavorite, isLoading: isFavoriteLoading } = useFavorites();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleFavorite = async () => {
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening edit dialog
     if (!token) return;
 
     const newFavoritedState = await toggleFavorite(
@@ -45,7 +46,6 @@ export function ClothingItemCard({
 
   const handleDelete = async () => {
     if (!token) return;
-
     setIsDeleting(true);
     try {
       await deleteClothingItem(token, item.id);
@@ -54,22 +54,7 @@ export function ClothingItemCard({
         onDelete();
       }
     } catch (error) {
-      console.error("Delete error:", error);
-
-      // Handle specific error codes
-      if (error instanceof Error) {
-        if (error.message.includes("403")) {
-          toast.error("You don't have permission to delete this item");
-        } else if (error.message.includes("404")) {
-          toast.error("Item not found");
-        } else if (error.message.includes("401")) {
-          toast.error("Please log in again");
-        } else {
-          toast.error(error.message || "Failed to delete item");
-        }
-      } else {
-        toast.error("Failed to delete item");
-      }
+      toast.error("Failed to delete clothing item");
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -78,7 +63,7 @@ export function ClothingItemCard({
 
   return (
     <>
-      <div className="group relative rounded-lg border bg-card text-card-foreground shadow transition-shadow hover:shadow-lg">
+      <div className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-2">
         <div className="relative aspect-square overflow-hidden rounded-t-lg">
           {item.imageUrl ? (
             <Image
@@ -92,12 +77,14 @@ export function ClothingItemCard({
               <span className="text-muted-foreground">No image</span>
             </div>
           )}
-          <div className="absolute right-2 top-2 flex gap-1">
+
+          {/* Always visible action buttons */}
+          <div className="absolute right-2 top-2 z-10 flex flex-col items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full bg-background/80 backdrop-blur hover:bg-background/90"
               onClick={handleFavorite}
+              className="h-8 w-8 rounded-full bg-background/80 backdrop-blur hover:bg-background/90"
               disabled={isFavoriteLoading(item.id, "clothing_item")}
             >
               <Heart
@@ -108,11 +95,15 @@ export function ClothingItemCard({
                 }`}
               />
             </Button>
+
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-full bg-background/80 backdrop-blur hover:bg-background/90 hover:text-red-500"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteDialog(true);
+              }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhotoUpload } from "@/components/ui/photo-upload";
 import { ClothingItem } from "@/lib/types";
 
 interface ClothingItemFormProps {
   item?: ClothingItem;
-  onSubmit: (
-    data: Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
-  ) => void;
+  onSubmit: (data: FormData) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 interface FormErrors {
@@ -25,39 +25,37 @@ export function ClothingItemForm({
   item,
   onSubmit,
   onCancel,
+  isSubmitting,
 }: ClothingItemFormProps) {
-  const [formData, setFormData] = useState<
-    Omit<ClothingItem, "id" | "userId" | "createdAt" | "updatedAt">
-  >({
-    name: item?.name || "",
-    category: item?.category || "",
-    color: item?.color || "",
-    brand: item?.brand || "",
-    size: item?.size || "",
-    imageUrl: item?.imageUrl || "",
-  });
+  const [name, setName] = useState(item?.name || "");
+  const [category, setCategory] = useState(item?.category || "");
+  const [color, setColor] = useState(item?.color || "");
+  const [brand, setBrand] = useState(item?.brand || "");
+  const [size, setSize] = useState(item?.size || "");
+  const [image, setImage] = useState<File | string | null>(
+    item?.imageUrl || null
+  );
+  const [careLabel, setCareLabel] = useState<File | string | null>(null); // Assuming no existing URL for care label
 
   const [errors, setErrors] = useState<FormErrors>({});
 
+  useEffect(() => {
+    if (item) {
+      setName(item.name);
+      setCategory(item.category);
+      setColor(item.color);
+      setBrand(item.brand || "");
+      setSize(item.size);
+      setImage(item.imageUrl || null);
+    }
+  }, [item]);
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.name?.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!formData.category?.trim()) {
-      newErrors.category = "Category is required";
-    }
-
-    if (!formData.color?.trim()) {
-      newErrors.color = "Color is required";
-    }
-
-    if (!formData.size?.trim()) {
-      newErrors.size = "Size is required";
-    }
-
+    if (!name.trim()) newErrors.name = "Name is required";
+    if (!category.trim()) newErrors.category = "Category is required";
+    if (!color.trim()) newErrors.color = "Color is required";
+    if (!size.trim()) newErrors.size = "Size is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -65,35 +63,44 @@ export function ClothingItemForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
-    }
-  };
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("category", category);
+      formData.append("color", color);
+      formData.append("size", size);
+      if (brand) formData.append("brand", brand);
+      formData.append("season", "all"); // default value
+      formData.append("is_public", "false"); // default value
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
+      if (image instanceof File) {
+        formData.append("image", image);
+      }
+      if (careLabel instanceof File) {
+        formData.append("care_label", careLabel);
+      }
+
+      onSubmit(formData);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4">
+        <PhotoUpload label="Item Image" value={image} onChange={setImage} />
+        <PhotoUpload
+          label="Care Label"
+          value={careLabel}
+          onChange={setCareLabel}
+        />
+      </div>
+
       <div>
         <Label htmlFor="name">Name</Label>
         <Input
           id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Enter item name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Blue T-Shirt"
           className={errors.name ? "border-red-500" : ""}
         />
         {errors.name && (
@@ -105,10 +112,9 @@ export function ClothingItemForm({
         <Label htmlFor="category">Category</Label>
         <Input
           id="category"
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-          placeholder="Enter category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          placeholder="e.g., Top"
           className={errors.category ? "border-red-500" : ""}
         />
         {errors.category && (
@@ -120,10 +126,9 @@ export function ClothingItemForm({
         <Label htmlFor="color">Color</Label>
         <Input
           id="color"
-          name="color"
-          value={formData.color}
-          onChange={handleChange}
-          placeholder="Enter color"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          placeholder="e.g., Blue"
           className={errors.color ? "border-red-500" : ""}
         />
         {errors.color && (
@@ -135,10 +140,9 @@ export function ClothingItemForm({
         <Label htmlFor="brand">Brand</Label>
         <Input
           id="brand"
-          name="brand"
-          value={formData.brand || ""}
-          onChange={handleChange}
-          placeholder="Enter brand"
+          value={brand}
+          onChange={(e) => setBrand(e.target.value)}
+          placeholder="e.g., Nike"
         />
       </div>
 
@@ -146,10 +150,9 @@ export function ClothingItemForm({
         <Label htmlFor="size">Size</Label>
         <Input
           id="size"
-          name="size"
-          value={formData.size}
-          onChange={handleChange}
-          placeholder="Enter size"
+          value={size}
+          onChange={(e) => setSize(e.target.value)}
+          placeholder="e.g., Medium"
           className={errors.size ? "border-red-500" : ""}
         />
         {errors.size && (
@@ -157,22 +160,18 @@ export function ClothingItemForm({
         )}
       </div>
 
-      <div>
-        <Label htmlFor="imageUrl">Image URL</Label>
-        <Input
-          id="imageUrl"
-          name="imageUrl"
-          value={formData.imageUrl}
-          onChange={handleChange}
-          placeholder="Enter image URL"
-        />
-      </div>
-
-      <div className="flex gap-2 justify-end">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex gap-2 justify-end pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
-        <Button type="submit">{item ? "Update Item" : "Add Item"}</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : item ? "Update Item" : "Add Item"}
+        </Button>
       </div>
     </form>
   );
