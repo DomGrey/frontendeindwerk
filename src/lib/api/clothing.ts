@@ -6,10 +6,12 @@ import {
 } from "./config";
 import type {
   ApiResponse,
-  ClothingItem,
+  ClothingItem as ApiClothingItem,
   ClothingItemSearchParams,
   CreateClothingItemData,
 } from "../types/api";
+import { ClothingItem } from "../types";
+import { toClothingItem } from "../utils";
 
 export const getClothingItems = async (
   token: string,
@@ -26,7 +28,7 @@ export const getClothingItems = async (
     headers: getHeaders(token),
   });
 
-  const data: ApiResponse<ClothingItem[]> = await response.json();
+  const data: ApiResponse<ApiClothingItem[]> = await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
@@ -36,7 +38,7 @@ export const getClothingItems = async (
     );
   }
 
-  return data.data;
+  return data.data.map(toClothingItem);
 };
 
 export const searchClothingItems = async (
@@ -62,7 +64,7 @@ export const searchClothingItems = async (
     }
   );
 
-  const data: ApiResponse<ClothingItem[]> = await response.json();
+  const data: ApiResponse<ApiClothingItem[]> = await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
@@ -73,7 +75,7 @@ export const searchClothingItems = async (
   }
 
   return {
-    items: data.data,
+    items: data.data.map(toClothingItem),
     total: data.meta?.pagination?.total || 0,
     page: data.meta?.pagination?.page || 1,
     pageSize: data.meta?.pagination?.pageSize || 10,
@@ -90,7 +92,7 @@ export const createClothingItem = async (
     body: formData,
   });
 
-  const data: ApiResponse<ClothingItem> = await response.json();
+  const data: ApiResponse<ApiClothingItem> = await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
@@ -100,7 +102,7 @@ export const createClothingItem = async (
     );
   }
 
-  return data.data;
+  return toClothingItem(data.data);
 };
 
 export const getClothingItem = async (
@@ -111,7 +113,7 @@ export const getClothingItem = async (
     headers: getHeaders(token),
   });
 
-  const data: ApiResponse<ClothingItem> = await response.json();
+  const data: ApiResponse<ApiClothingItem> = await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
@@ -121,7 +123,7 @@ export const getClothingItem = async (
     );
   }
 
-  return data.data;
+  return toClothingItem(data.data);
 };
 
 export const updateClothingItem = async (
@@ -140,7 +142,7 @@ export const updateClothingItem = async (
     body: formData,
   });
 
-  const data: ApiResponse<ClothingItem> = await response.json();
+  const data: ApiResponse<ApiClothingItem> = await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
@@ -150,7 +152,7 @@ export const updateClothingItem = async (
     );
   }
 
-  return data.data;
+  return toClothingItem(data.data);
 };
 
 export const deleteClothingItem = async (

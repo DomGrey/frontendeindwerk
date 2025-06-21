@@ -18,6 +18,7 @@ interface AuthContextType {
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,10 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      const { token, user } = await authApi.login(credentials);
-      localStorage.setItem(TOKEN_KEY, token);
-      setToken(token);
-      setUser(user);
+      const { data } = await authApi.login(credentials);
+      localStorage.setItem(TOKEN_KEY, data.token);
+      setToken(data.token);
+      setUser(data.user);
       router.push("/dashboard");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Login failed");
@@ -70,10 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      const { token, user } = await authApi.register(credentials);
-      localStorage.setItem(TOKEN_KEY, token);
-      setToken(token);
-      setUser(user);
+      const { data } = await authApi.register(credentials);
+      localStorage.setItem(TOKEN_KEY, data.token);
+      setToken(data.token);
+      setUser(data.user);
       router.push("/dashboard");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Registration failed");
@@ -113,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         clearError,
+        setUser,
       }}
     >
       {children}

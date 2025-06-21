@@ -5,6 +5,7 @@ import type {
   LoginCredentials,
   RegisterCredentials,
   User,
+  UpdateProfileData,
 } from "../types/api";
 
 export const login = async (
@@ -97,6 +98,29 @@ export const getMe = async (token: string): Promise<User> => {
     throw new ApiError(
       data.error?.message || "Failed to fetch user data",
       data.error?.code || "AUTH_ERROR",
+      response.status
+    );
+  }
+
+  return data.data;
+};
+
+export const updateProfile = async (
+  token: string,
+  profileData: UpdateProfileData
+): Promise<User> => {
+  const response = await fetch(`${API_BASE_URL}/user/profile`, {
+    method: "PUT",
+    headers: getHeaders(token),
+    body: JSON.stringify(profileData),
+  });
+
+  const data: ApiResponse<User> = await response.json();
+
+  if (!response.ok || data.error) {
+    throw new ApiError(
+      data.error?.message || "Failed to update profile",
+      data.error?.code || "UPDATE_ERROR",
       response.status
     );
   }

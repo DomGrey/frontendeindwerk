@@ -45,6 +45,13 @@ export interface RegisterCredentials {
   password_confirmation: string;
 }
 
+export interface UpdateProfileData {
+  name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
 // Clothing Item types
 export interface ClothingItem {
   id: number;
