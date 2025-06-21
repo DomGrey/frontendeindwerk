@@ -24,7 +24,7 @@ export function OutfitsPageClient() {
     id: apiOutfit.id,
     name: apiOutfit.name,
     description: apiOutfit.description,
-    clothingItemIds: apiOutfit.clothing_items?.map((item) => item.id) || [],
+    clothingItemIds: (apiOutfit.clothing_items || []).map((item) => item.id),
     userId: apiOutfit.user_id,
     createdAt: apiOutfit.created_at,
     updatedAt: apiOutfit.updated_at,
@@ -80,33 +80,34 @@ export function OutfitsPageClient() {
 
     setIsSubmitting(true);
     try {
+      let newOrUpdatedOutfit: ApiOutfit;
       if (selectedOutfit) {
         // Update existing outfit
-        const updatedOutfit: ApiOutfit = await updateOutfit(
-          token,
-          selectedOutfit.id,
-          {
-            name: data.name,
-            description: data.description,
-            is_public: false,
-            clothing_item_ids: data.clothingItemIds,
-          }
-        );
-        setOutfits(
-          outfits.map((it) =>
-            it.id === selectedOutfit.id ? transformApiOutfit(updatedOutfit) : it
-          )
-        );
-        toast.success("Outfit updated successfully");
-      } else {
-        // Create new outfit
-        const newOutfit: ApiOutfit = await createOutfit(token, {
+        newOrUpdatedOutfit = await updateOutfit(token, selectedOutfit.id, {
           name: data.name,
           description: data.description,
           is_public: false,
           clothing_item_ids: data.clothingItemIds,
         });
-        setOutfits((prev) => [...prev, transformApiOutfit(newOutfit)]);
+
+        setOutfits(
+          outfits.map((it) =>
+            it.id === selectedOutfit.id
+              ? transformApiOutfit(newOrUpdatedOutfit)
+              : it
+          )
+        );
+        toast.success("Outfit updated successfully");
+      } else {
+        // Create new outfit
+        newOrUpdatedOutfit = await createOutfit(token, {
+          name: data.name,
+          description: data.description,
+          is_public: false,
+          clothing_item_ids: data.clothingItemIds,
+        });
+
+        setOutfits((prev) => [...prev, transformApiOutfit(newOrUpdatedOutfit)]);
         toast.success("Outfit created successfully");
       }
       setDialogOpen(false);
