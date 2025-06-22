@@ -63,6 +63,7 @@ export interface ClothingItem {
   size: string;
   season: string;
   status?: string;
+  image_path?: string;
   image_url?: string;
   thumbnail_url?: string;
   care_label_url?: string;

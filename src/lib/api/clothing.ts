@@ -15,14 +15,22 @@ import { toClothingItem } from "../utils";
 
 export const getClothingItems = async (
   token: string,
-  params?: { category?: string; season?: string }
+  params?: ClothingItemSearchParams
 ): Promise<ClothingItem[]> => {
-  const queryParams = new URLSearchParams(
-    params as Record<string, string>
-  ).toString();
-  const url = `${API_BASE_URL}/clothing-items${
-    queryParams ? `?${queryParams}` : ""
-  }`;
+  const queryParams = new URLSearchParams();
+  let hasParams = false;
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value.toString());
+        hasParams = true;
+      }
+    });
+  }
+
+  const endpoint = hasParams ? "/clothing-items/search" : "/clothing-items";
+  const url = `${API_BASE_URL}${endpoint}?${queryParams.toString()}`;
 
   const response = await fetch(url, {
     headers: getHeaders(token),
@@ -39,47 +47,6 @@ export const getClothingItems = async (
   }
 
   return data.data.map(toClothingItem);
-};
-
-export const searchClothingItems = async (
-  token: string,
-  params: ClothingItemSearchParams
-): Promise<{
-  items: ClothingItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-}> => {
-  const queryParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) {
-      queryParams.append(key, value.toString());
-    }
-  });
-
-  const response = await fetch(
-    `${API_BASE_URL}/clothing-items/search?${queryParams}`,
-    {
-      headers: getHeaders(token),
-    }
-  );
-
-  const data: ApiResponse<ApiClothingItem[]> = await response.json();
-
-  if (!response.ok || data.error) {
-    throw new ApiError(
-      data.error?.message || "Search failed",
-      data.error?.code || "SEARCH_ERROR",
-      response.status
-    );
-  }
-
-  return {
-    items: data.data.map(toClothingItem),
-    total: data.meta?.pagination?.total || 0,
-    page: data.meta?.pagination?.page || 1,
-    pageSize: data.meta?.pagination?.pageSize || 10,
-  };
 };
 
 export const createClothingItem = async (

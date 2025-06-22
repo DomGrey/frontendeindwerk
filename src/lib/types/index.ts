@@ -15,6 +15,7 @@ export interface ClothingItem {
   category: string;
   color: string;
   brand?: string;
+  season: string;
   userId: number;
   createdAt: string;
   updatedAt: string;

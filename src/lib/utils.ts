@@ -2,9 +2,19 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ClothingItem as ApiClothingItem } from "@/lib/types/api";
 import { ClothingItem } from "@/lib/types";
+import { API_BASE_URL } from "@/lib/api/config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+function getImageUrl(imagePath?: string): string {
+  if (!imagePath) return "";
+
+  // The API_BASE_URL might be http://localhost:3000/api or http://localhost:8000/api
+  // Images are served from the /storage path at the root of the API domain.
+  const baseUrl = API_BASE_URL.replace("/api", "");
+  return `${baseUrl}/storage/${imagePath}`;
 }
 
 export function toClothingItem(apiItem: ApiClothingItem): ClothingItem {
@@ -14,13 +24,14 @@ export function toClothingItem(apiItem: ApiClothingItem): ClothingItem {
     category: apiItem.category,
     season: apiItem.season,
     color: apiItem.color,
-    imageUrl: apiItem.image_url,
+    brand: apiItem.brand,
+    size: apiItem.size,
+    imageUrl: getImageUrl(apiItem.image_path),
     userId: apiItem.user_id,
     createdAt: apiItem.created_at,
     updatedAt: apiItem.updated_at,
   };
 }
-
 const RECENTLY_VIEWED_KEY = "recentlyViewedClothing";
 const MAX_RECENT_ITEMS = 8;
 

@@ -128,6 +128,9 @@ export function ClothingItemCard({
             <Badge variant="outline" className="text-xs">
               {item.color}
             </Badge>
+            <Badge variant="outline" className="text-xs capitalize">
+              {item.season}
+            </Badge>
           </div>
         </CardContent>
       </Card>

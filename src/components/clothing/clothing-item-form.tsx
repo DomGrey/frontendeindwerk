@@ -33,6 +33,7 @@ const clothingItemSchema = z.object({
   brand: z.string().optional(),
   sizeType: z.string().min(1, "Size type is required"),
   size: z.string().min(1, "Size is required"),
+  season: z.string().min(1, "Season is required"),
   description: z.string().optional(),
 });
 
@@ -92,6 +93,8 @@ const numberSizes = [
   "60",
 ];
 
+const seasons = ["All-Year", "Spring", "Summer", "Autumn", "Winter"];
+
 const colors = [
   "Black",
   "White",
@@ -136,6 +139,7 @@ export function ClothingItemForm({
       brand: item?.brand || "",
       sizeType: "letter",
       size: item?.size || "",
+      season: item?.season || "All-Year",
       description: "",
     },
   });
@@ -162,6 +166,7 @@ export function ClothingItemForm({
         brand: item.brand || "",
         sizeType: detectedSizeType,
         size: item.size,
+        season: item.season || "All-Year",
         description: "",
       });
       setImage(item.imageUrl || null);
@@ -174,9 +179,9 @@ export function ClothingItemForm({
     formData.append("category", data.category);
     formData.append("color", data.color);
     formData.append("size", data.size);
+    formData.append("season", data.season);
     if (data.brand) formData.append("brand", data.brand);
     if (data.description) formData.append("description", data.description);
-    formData.append("season", "all");
 
     if (image instanceof File) {
       formData.append("image", image);
@@ -287,6 +292,31 @@ export function ClothingItemForm({
               <FormControl>
                 <Input placeholder="e.g., Nike" {...field} autoComplete="off" />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="season"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Season</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select season" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {seasons.map((season) => (
+                    <SelectItem key={season} value={season}>
+                      {season}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
