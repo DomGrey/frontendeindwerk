@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { ClothingItemForm } from "./clothing-item-form";
 import { addToRecentlyViewed } from "@/lib/utils";
@@ -39,6 +40,11 @@ export function ClothingItemDialog({
           <DialogTitle>
             {item ? "Edit Clothing Item" : "Add New Clothing Item"}
           </DialogTitle>
+          <DialogDescription>
+            {item
+              ? "Update the details of your clothing item."
+              : "Add a new item to your virtual closet."}
+          </DialogDescription>
         </DialogHeader>
         <ClothingItemForm
           item={item}

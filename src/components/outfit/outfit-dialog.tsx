@@ -29,13 +29,15 @@ export function OutfitDialog({
 }: OutfitDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{outfit ? "Edit Outfit" : "Create Outfit"}</DialogTitle>
+          <DialogTitle>
+            {outfit ? "Edit Outfit" : "Create New Outfit"}
+          </DialogTitle>
           <DialogDescription>
             {outfit
-              ? "Update your outfit details below."
-              : "Create a new outfit by filling out the form below."}
+              ? "Update the details of your outfit."
+              : "Create a new outfit by selecting clothing items."}
           </DialogDescription>
         </DialogHeader>
         <OutfitForm

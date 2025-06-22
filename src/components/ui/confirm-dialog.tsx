@@ -3,10 +3,10 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -15,9 +15,10 @@ interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
+  onConfirm: () => void;
+  onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
-  onConfirm: () => void;
   loading?: boolean;
 }
 
@@ -26,9 +27,10 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmText = "Delete",
-  cancelText = "Cancel",
   onConfirm,
+  onCancel,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
   loading = false,
 }: ConfirmDialogProps) {
   return (
@@ -41,13 +43,16 @@ export function ConfirmDialog({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              onCancel?.();
+              onOpenChange(false);
+            }}
             disabled={loading}
           >
             {cancelText}
           </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={loading}>
-            {loading ? "Deleting..." : confirmText}
+          <Button onClick={onConfirm} disabled={loading}>
+            {loading ? "Processing..." : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>
