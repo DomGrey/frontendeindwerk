@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { ClothingItemCard } from "@/components/clothing/clothing-item-card";
 import { ClothingItemDialog } from "@/components/clothing/clothing-item-dialog";
+import { ClothingItem } from "@/lib/types";
 import {
   getClothingItems,
   createClothingItem,
@@ -22,8 +23,6 @@ import { getFavoriteClothingItems } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import { useDebounce } from "@/lib/hooks/use-debounce";
-import { toClothingItem } from "@/lib/utils";
-import type { ClothingItem as ApiClothingItem } from "@/lib/types/api";
 
 const categories = [
   "All",
@@ -39,11 +38,11 @@ const seasons = ["All", "Spring", "Summer", "Autumn", "Winter"];
 
 export function ClothingPageClient() {
   const { token } = useAuth();
-  const [items, setItems] = useState<any[]>([]);
+  const [allItems, setAllItems] = useState<ClothingItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | undefined>();
+  const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
@@ -70,9 +69,7 @@ export function ClothingPageClient() {
         getFavoriteClothingItems(token),
       ]);
 
-      setItems(
-        clothingData.map((item: ApiClothingItem) => toClothingItem(item))
-      );
+      setAllItems(clothingData);
 
       let favoritedIdsSet = new Set<number>();
       if (Array.isArray(favoritesData)) {
@@ -91,6 +88,13 @@ export function ClothingPageClient() {
     fetchData();
   }, [fetchData]);
 
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) return allItems;
+    return allItems.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [allItems, searchQuery]);
+
   const handleFilterChange = (filterName: string, value: string) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
   };
@@ -100,7 +104,7 @@ export function ClothingPageClient() {
     setDialogOpen(true);
   };
 
-  const handleEditItemClick = (item: any) => {
+  const handleEditItemClick = (item: ClothingItem) => {
     setSelectedItem(item);
     setDialogOpen(true);
   };
@@ -119,13 +123,13 @@ export function ClothingPageClient() {
           selectedItem.id,
           formData
         );
-        setItems(
-          items.map((it) => (it.id === selectedItem.id ? updatedItem : it))
+        setAllItems(
+          allItems.map((it) => (it.id === selectedItem.id ? updatedItem : it))
         );
         toast.success("Clothing item updated successfully");
       } else {
         const newItem = await createClothingItem(token, formData);
-        setItems((prev) => [...prev, newItem]);
+        setAllItems((prev) => [...prev, newItem]);
         toast.success("Clothing item added successfully");
       }
       setDialogOpen(false);
@@ -153,7 +157,7 @@ export function ClothingPageClient() {
   };
 
   const handleDeleteItem = (itemId: number) => {
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    setAllItems((prev) => prev.filter((item) => item.id !== itemId));
   };
 
   return (
@@ -234,7 +238,7 @@ export function ClothingPageClient() {
         <div className="text-center">Loading...</div>
       ) : (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <div
               key={item.id}
               onClick={() => handleEditItemClick(item)}
