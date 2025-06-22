@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { ClothingItem } from "@/lib/types";
 import {
   Dialog,
@@ -8,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ClothingItemForm } from "./clothing-item-form";
+import { addToRecentlyViewed } from "@/lib/utils";
 
 interface ClothingItemDialogProps {
   open: boolean;
@@ -24,6 +26,12 @@ export function ClothingItemDialog({
   onSubmit,
   isSubmitting,
 }: ClothingItemDialogProps) {
+  useEffect(() => {
+    if (open && item) {
+      addToRecentlyViewed(item);
+    }
+  }, [open, item]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">

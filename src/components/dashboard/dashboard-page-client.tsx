@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Shirt, Clapperboard, Heart } from "lucide-react";
 import { ClothingItem } from "@/lib/types";
 import { DashboardItemCard } from "./dashboard-item-card";
+import { RandomSuggestions } from "./random-suggestions";
 
 interface StatCardProps {
   title: string;
@@ -35,6 +36,7 @@ export function DashboardPageClient() {
   const { token } = useAuth();
   const [stats, setStats] = useState({ clothing: 0, outfits: 0, favorites: 0 });
   const [recentItems, setRecentItems] = useState<ClothingItem[]>([]);
+  const [allClothingItems, setAllClothingItems] = useState<ClothingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function DashboardPageClient() {
         });
 
         setRecentItems(sortedItems.slice(0, 4));
+        setAllClothingItems(allClothingItems);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -134,6 +137,8 @@ export function DashboardPageClient() {
           </div>
         )}
       </div>
+
+      <RandomSuggestions items={allClothingItems} />
     </div>
   );
 }
