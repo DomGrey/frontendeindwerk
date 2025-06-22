@@ -1,57 +1,54 @@
 "use client";
-import { useActionState } from "react";
 import { useAuth } from "@/lib/context/auth-context";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useState } from "react";
 
-type LoginFormState = {
-  error: string | null;
-  fieldErrors: Record<string, string>;
-};
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
-function validateLogin({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) {
-  const errors: Record<string, string> = {};
-  if (!email) errors.email = "Email is required";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    errors.email = "Please enter a valid email address";
-  if (!password) errors.password = "Password is required";
-  return errors;
-}
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const { login } = useAuth();
-  const initialState: LoginFormState = { error: null, fieldErrors: {} };
-  const loginReducer = async (
-    state: LoginFormState,
-    formData: FormData
-  ): Promise<LoginFormState> => {
-    const email = formData.get("email")?.toString() ?? "";
-    const password = formData.get("password")?.toString() ?? "";
-    const fieldErrors = validateLogin({ email, password });
-    if (Object.keys(fieldErrors).length > 0)
-      return { error: null, fieldErrors };
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      await login({ email, password });
-      return { error: null, fieldErrors: {} };
+      await login(data);
     } catch (e) {
-      return {
-        error: e instanceof Error ? e.message : "Login failed",
-        fieldErrors: {},
-      };
+      setError(e instanceof Error ? e.message : "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
-  const [state, formAction] = useActionState<LoginFormState, FormData>(
-    loginReducer,
-    initialState
-  );
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-sm flex flex-col space-y-6">
@@ -63,47 +60,51 @@ export default function LoginForm() {
             Enter your email to sign in to your account
           </p>
         </div>
-        <div className="grid gap-6">
-          <form
-            action={formAction}
-            noValidate
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="none"
-          >
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  placeholder="name@example.com"
-                  type="email"
-                />
-                {state.fieldErrors.email && (
-                  <span className="text-sm text-red-500">
-                    {state.fieldErrors.email}
-                  </span>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" />
-                {state.fieldErrors.password && (
-                  <span className="text-sm text-red-500">
-                    {state.fieldErrors.password}
-                  </span>
-                )}
-              </div>
-              {state.error && (
-                <div className="text-sm text-red-500 text-center">
-                  {state.error}
-                </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="name@example.com"
+                      type="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              <Button type="submit">Sign In</Button>
-            </div>
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {error && (
+              <div className="text-sm text-red-500 text-center">{error}</div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
           </form>
-        </div>
+        </Form>
+
         <p className="px-8 text-center text-sm text-muted-foreground">
           <Link
             href="/register"

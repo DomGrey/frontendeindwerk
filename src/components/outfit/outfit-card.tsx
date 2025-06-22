@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Outfit } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Heart, Trash2 } from "lucide-react";
 import { useFavorites } from "@/lib/hooks/use-favorites";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -29,7 +31,7 @@ export function OutfitCard({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening edit dialog
+    e.stopPropagation();
     if (!token) return;
 
     const newFavoritedState = await toggleFavorite(
@@ -63,8 +65,8 @@ export function OutfitCard({
 
   return (
     <>
-      <div className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-t-lg bg-muted">
+      <Card className="group relative overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <div className="grid h-full grid-cols-2 gap-1 p-2">
             {/* Placeholder for outfit items */}
             {Array.from({ length: 4 }).map((_, i) => (
@@ -106,24 +108,25 @@ export function OutfitCard({
             </Button>
           </div>
         </div>
-        <div className="p-4">
+
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold">{outfit.name}</h3>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-sm">{outfit.name}</h3>
               {outfit.description && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground line-clamp-2">
                   {outfit.description}
                 </p>
               )}
             </div>
           </div>
-          <div className="mt-2">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-3">
+            <Badge variant="secondary" className="text-xs">
               {outfit.clothingItemIds.length} items
-            </p>
+            </Badge>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         open={showDeleteDialog}

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ClothingItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Heart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useFavorites } from "@/lib/hooks/use-favorites";
@@ -30,7 +32,7 @@ export function ClothingItemCard({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening edit dialog
+    e.stopPropagation();
     if (!token) return;
 
     const newFavoritedState = await toggleFavorite(
@@ -63,8 +65,8 @@ export function ClothingItemCard({
 
   return (
     <>
-      <div className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-2">
-        <div className="relative aspect-square overflow-hidden rounded-t-lg">
+      <Card className="group relative overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
+        <div className="relative aspect-square overflow-hidden">
           {item.imageUrl ? (
             <Image
               src={item.imageUrl}
@@ -78,7 +80,6 @@ export function ClothingItemCard({
             </div>
           )}
 
-          {/* Always visible action buttons */}
           <div className="absolute right-2 top-2 z-10 flex flex-col items-center gap-2">
             <Button
               variant="ghost"
@@ -109,26 +110,27 @@ export function ClothingItemCard({
             </Button>
           </div>
         </div>
-        <div className="p-4">
+
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-semibold">{item.name}</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-1">
+              <h3 className="font-semibold text-sm">{item.name}</h3>
+              <p className="text-xs text-muted-foreground">
                 {item.brand && `${item.brand} • `}
                 {item.size}
               </p>
             </div>
           </div>
-          <div className="mt-2 flex gap-2">
-            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+          <div className="mt-3 flex gap-2 flex-wrap">
+            <Badge variant="secondary" className="text-xs">
               {item.category}
-            </span>
-            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+            </Badge>
+            <Badge variant="outline" className="text-xs">
               {item.color}
-            </span>
+            </Badge>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         open={showDeleteDialog}
