@@ -1,11 +1,44 @@
 "use client";
 
-import { useState } from "react";
 import { useAuth } from "@/lib/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import type { UpdateProfileData } from "@/lib/types/api";
+
+const profileSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().optional(),
+    password_confirmation: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.password && data.password.length < 8) return false;
+      return true;
+    },
+    {
+      message: "Password must be at least 8 characters long",
+      path: ["password"],
+    }
+  )
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  });
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 interface ProfileFormProps {
   onSubmit: (data: UpdateProfileData) => void;
@@ -19,91 +52,108 @@ export function ProfileForm({
   isSubmitting,
 }: ProfileFormProps) {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    password: "",
-    password_confirmation: "",
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      password: "",
+      password_confirmation: "",
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (data: ProfileFormData) => {
     const dataToSubmit: UpdateProfileData = {
-      name: formData.name,
-      email: formData.email,
+      name: data.name,
+      email: data.email,
     };
-    if (formData.password) {
-      dataToSubmit.password = formData.password;
-      dataToSubmit.password_confirmation = formData.password_confirmation;
+    if (data.password) {
+      dataToSubmit.password = data.password;
+      dataToSubmit.password_confirmation = data.password_confirmation;
     }
     onSubmit(dataToSubmit);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="name">Name</Label>
-        <Input
-          id="name"
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-4"
+        autoComplete="off"
+      >
+        <FormField
+          control={form.control}
           name="name"
-          value={formData.name}
-          onChange={handleChange}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} autoComplete="off" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
+        <FormField
+          control={form.control}
           name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} autoComplete="off" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="pt-4">
-        <p className="text-sm text-muted-foreground">
-          Leave the fields below blank if you don't want to change your
-          password.
-        </p>
-      </div>
-      <div>
-        <Label htmlFor="password">New Password</Label>
-        <Input
-          id="password"
+        <div className="pt-4">
+          <p className="text-sm text-muted-foreground">
+            Leave the fields below blank if you don't want to change your
+            password.
+          </p>
+        </div>
+        <FormField
+          control={form.control}
           name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>New Password</FormLabel>
+              <FormControl>
+                <Input type="password" {...field} autoComplete="new-password" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div>
-        <Label htmlFor="password_confirmation">Confirm New Password</Label>
-        <Input
-          id="password_confirmation"
+        <FormField
+          control={form.control}
           name="password_confirmation"
-          type="password"
-          value={formData.password_confirmation}
-          onChange={handleChange}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm New Password</FormLabel>
+              <FormControl>
+                <Input type="password" {...field} autoComplete="new-password" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="flex justify-end gap-2 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

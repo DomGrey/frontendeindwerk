@@ -31,6 +31,7 @@ const clothingItemSchema = z.object({
   category: z.string().min(1, "Category is required"),
   color: z.string().min(1, "Color is required"),
   brand: z.string().optional(),
+  sizeType: z.string().min(1, "Size type is required"),
   size: z.string().min(1, "Size is required"),
   description: z.string().optional(),
 });
@@ -55,7 +56,41 @@ const categories = [
   "Sleepwear",
 ];
 
-const sizes = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
+const sizeTypes = [
+  { value: "letter", label: "Letter (S, M, L, XL)" },
+  { value: "number", label: "Number (36, 38, 40, 42)" },
+  { value: "custom", label: "Custom Size" },
+];
+
+const letterSizes = [
+  "XXS",
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "XXXL",
+  "One Size",
+];
+
+const numberSizes = [
+  "32",
+  "34",
+  "36",
+  "38",
+  "40",
+  "42",
+  "44",
+  "46",
+  "48",
+  "50",
+  "52",
+  "54",
+  "56",
+  "58",
+  "60",
+];
 
 const colors = [
   "Black",
@@ -90,6 +125,7 @@ export function ClothingItemForm({
     item?.imageUrl || null
   );
   const [careLabel, setCareLabel] = useState<File | string | null>(null);
+  const [sizeType, setSizeType] = useState<string>("letter");
 
   const form = useForm<ClothingItemFormData>({
     resolver: zodResolver(clothingItemSchema),
@@ -98,6 +134,7 @@ export function ClothingItemForm({
       category: item?.category || "",
       color: item?.color || "",
       brand: item?.brand || "",
+      sizeType: "letter",
       size: item?.size || "",
       description: "",
     },
@@ -105,11 +142,25 @@ export function ClothingItemForm({
 
   useEffect(() => {
     if (item) {
+      // Determine size type from existing size
+      let detectedSizeType = "letter";
+      if (item.size && /^\d+$/.test(item.size)) {
+        detectedSizeType = "number";
+      } else if (
+        item.size &&
+        !letterSizes.includes(item.size) &&
+        !numberSizes.includes(item.size)
+      ) {
+        detectedSizeType = "custom";
+      }
+
+      setSizeType(detectedSizeType);
       form.reset({
         name: item.name,
         category: item.category,
         color: item.color,
         brand: item.brand || "",
+        sizeType: detectedSizeType,
         size: item.size,
         description: "",
       });
@@ -137,9 +188,19 @@ export function ClothingItemForm({
     onSubmit(formData);
   };
 
+  const handleSizeTypeChange = (newSizeType: string) => {
+    setSizeType(newSizeType);
+    form.setValue("sizeType", newSizeType);
+    form.setValue("size", ""); // Reset size when type changes
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-4"
+        autoComplete="off"
+      >
         <div className="grid grid-cols-1 gap-4">
           <PhotoUpload label="Item Image" value={image} onChange={setImage} />
           <PhotoUpload
@@ -156,7 +217,11 @@ export function ClothingItemForm({
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Blue T-Shirt" {...field} />
+                <Input
+                  placeholder="e.g., Blue T-Shirt"
+                  {...field}
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -220,37 +285,85 @@ export function ClothingItemForm({
             <FormItem>
               <FormLabel>Brand</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Nike" {...field} />
+                <Input placeholder="e.g., Nike" {...field} autoComplete="off" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="size"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Size</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {sizes.map((size) => (
-                    <SelectItem key={size} value={size}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="sizeType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Size Type</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handleSizeTypeChange(value);
+                  }}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select size type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {sizeTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="size"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Size</FormLabel>
+                {sizeType === "custom" ? (
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., 10.5, 28x32, Custom"
+                      {...field}
+                      autoComplete="off"
+                    />
+                  </FormControl>
+                ) : (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(sizeType === "number" ? numberSizes : letterSizes).map(
+                        (size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
@@ -263,6 +376,7 @@ export function ClothingItemForm({
                   placeholder="Add any additional details about this item..."
                   className="min-h-[80px]"
                   {...field}
+                  autoComplete="off"
                 />
               </FormControl>
               <FormMessage />

@@ -28,6 +28,7 @@ import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { toClothingItem } from "@/lib/utils";
 import type { ClothingItem as ApiClothingItem } from "@/lib/types/api";
 
 const outfitSchema = z.object({
@@ -82,20 +83,7 @@ export function OutfitForm({
       setLoading(true);
       try {
         const items = await getClothingItems(token);
-        setAvailableItems(
-          items.map((item: ApiClothingItem) => ({
-            id: item.id,
-            name: item.name,
-            size: item.size,
-            imageUrl: item.image_url || "",
-            category: item.category,
-            color: item.color,
-            brand: item.brand,
-            userId: item.user_id,
-            createdAt: item.created_at,
-            updatedAt: item.updated_at,
-          }))
-        );
+        setAvailableItems(items.map(toClothingItem));
       } catch (error) {
         console.error("Failed to load clothing items:", error);
       } finally {
@@ -137,7 +125,11 @@ export function OutfitForm({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+          autoComplete="off"
+        >
           <FormField
             control={form.control}
             name="name"
@@ -145,7 +137,11 @@ export function OutfitForm({
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Summer Casual Outfit" {...field} />
+                  <Input
+                    placeholder="e.g., Summer Casual Outfit"
+                    {...field}
+                    autoComplete="off"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -163,6 +159,7 @@ export function OutfitForm({
                     placeholder="Describe this outfit..."
                     className="min-h-[80px]"
                     {...field}
+                    autoComplete="off"
                   />
                 </FormControl>
                 <FormMessage />

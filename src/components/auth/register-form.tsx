@@ -71,7 +71,11 @@ export default function RegisterForm() {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            autoComplete="off"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -79,7 +83,11 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input
+                      placeholder="John Doe"
+                      {...field}
+                      autoComplete="off"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -97,6 +105,7 @@ export default function RegisterForm() {
                       placeholder="name@example.com"
                       type="email"
                       {...field}
+                      autoComplete="off"
                     />
                   </FormControl>
                   <FormMessage />
@@ -111,7 +120,11 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      autoComplete="new-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -125,7 +138,11 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      autoComplete="new-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
