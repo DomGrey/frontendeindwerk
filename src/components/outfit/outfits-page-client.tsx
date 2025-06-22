@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { OutfitCard } from "@/components/outfit/outfit-card";
 import { OutfitDialog } from "@/components/outfit/outfit-dialog";
 import { Outfit } from "@/lib/types";
-import { getOutfits, createOutfit, updateOutfit } from "@/lib/api/outfits";
+import {
+  getOutfits,
+  createOutfit,
+  updateOutfit,
+  searchOutfits,
+} from "@/lib/api/outfits";
 import { getFavoriteOutfits } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import type { Outfit as ApiOutfit } from "@/lib/types/api";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 
 export function OutfitsPageClient() {
   const { token } = useAuth();
@@ -19,6 +26,8 @@ export function OutfitsPageClient() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const transformApiOutfit = (apiOutfit: ApiOutfit): Outfit => ({
     id: apiOutfit.id,
@@ -30,45 +39,47 @@ export function OutfitsPageClient() {
     updatedAt: apiOutfit.updated_at,
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!token) return;
+  const fetchData = useCallback(async () => {
+    try {
+      if (!token) return;
+      setLoading(true);
 
-        const [outfitsResponse, favoritesData] = await Promise.all([
-          getOutfits(token),
-          getFavoriteOutfits(token),
-        ]);
+      const [outfitsResponse, favoritesData] = await Promise.all([
+        debouncedSearchQuery
+          ? searchOutfits(token, { q: debouncedSearchQuery })
+          : getOutfits(token),
+        getFavoriteOutfits(token),
+      ]);
 
-        setOutfits(outfitsResponse.outfits.map(transformApiOutfit));
+      setOutfits(outfitsResponse.outfits.map(transformApiOutfit));
 
-        let favoritedIdsSet = new Set<number>();
-
-        if (Array.isArray(favoritesData)) {
-          favoritedIdsSet = new Set(
-            favoritesData
-              .map((favorite: any) => {
-                if (favorite.favoritable_id) {
-                  return favorite.favoritable_id;
-                } else if (favorite.id) {
-                  return favorite.id;
-                }
-                return null;
-              })
-              .filter(Boolean)
-          );
-        }
-
-        setFavoritedIds(favoritedIdsSet);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
+      let favoritedIdsSet = new Set<number>();
+      if (Array.isArray(favoritesData)) {
+        favoritedIdsSet = new Set(
+          favoritesData
+            .map((favorite: any) => favorite.favoritable_id || favorite.id)
+            .filter(Boolean)
+        );
       }
-    };
+      setFavoritedIds(favoritedIdsSet);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      toast.error("Failed to load outfits.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, debouncedSearchQuery]);
 
+  useEffect(() => {
     fetchData();
-  }, [token]);
+  }, [fetchData]);
+
+  const filteredOutfits = useMemo(() => {
+    if (!searchQuery) return outfits;
+    return outfits.filter((outfit) =>
+      outfit.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [outfits, searchQuery]);
 
   const handleFormSubmit = async (
     data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
@@ -168,9 +179,16 @@ export function OutfitsPageClient() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">My Outfits</h1>
         <Button onClick={openAddDialog}>Create Outfit</Button>
+      </div>
+      <div className="mb-8">
+        <Input
+          placeholder="Search outfits..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {loading
@@ -186,7 +204,7 @@ export function OutfitsPageClient() {
                 </div>
               </div>
             ))
-          : outfits.map((outfit) => (
+          : filteredOutfits.map((outfit) => (
               <div
                 key={outfit.id}
                 onClick={() => openEditDialog(outfit)}
