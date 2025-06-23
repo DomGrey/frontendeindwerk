@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OutfitCard } from "@/components/outfit/outfit-card";
 import { OutfitDialog } from "@/components/outfit/outfit-dialog";
-import { Outfit } from "@/lib/types";
 import {
   getOutfits,
   createOutfit,
@@ -15,7 +14,7 @@ import {
 import { getFavoriteOutfits } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
-import type { Outfit as ApiOutfit } from "@/lib/types/api";
+import type { Outfit } from "@/lib/types/api";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { Favorite } from "@/lib/types/api";
 
@@ -31,14 +30,15 @@ export function OutfitsPageClient() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [filteredOutfits, setFilteredOutfits] = useState<Outfit[]>([]);
 
-  const transformApiOutfit = (apiOutfit: ApiOutfit): Outfit => ({
+  const transformApiOutfit = (apiOutfit: Outfit): Outfit => ({
     id: apiOutfit.id,
     name: apiOutfit.name,
     description: apiOutfit.description,
-    clothingItemIds: (apiOutfit.clothing_items || []).map((item) => item.id),
-    userId: apiOutfit.user_id,
-    createdAt: apiOutfit.created_at,
-    updatedAt: apiOutfit.updated_at,
+    is_public: apiOutfit.is_public,
+    user_id: apiOutfit.user_id,
+    clothing_items: apiOutfit.clothing_items,
+    created_at: apiOutfit.created_at,
+    updated_at: apiOutfit.updated_at,
   });
 
   const fetchData = useCallback(async () => {
@@ -76,6 +76,22 @@ export function OutfitsPageClient() {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredOutfits(outfits);
+    } else {
+      setFilteredOutfits(
+        outfits.filter(
+          (outfit) =>
+            outfit.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            outfit.description
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+  }, [outfits, searchQuery]);
+
   const handleSearch = (searchTerm: string) => {
     setSearchQuery(searchTerm);
     const filtered = outfits.filter(
@@ -87,7 +103,10 @@ export function OutfitsPageClient() {
   };
 
   const handleFormSubmit = async (
-    data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
+    data: Omit<
+      Outfit,
+      "id" | "user_id" | "created_at" | "updated_at" | "clothing_items"
+    > & { clothing_item_ids: number[] }
   ) => {
     if (!token) {
       toast.error("You must be logged in.");
@@ -96,14 +115,14 @@ export function OutfitsPageClient() {
 
     setIsSubmitting(true);
     try {
-      let newOrUpdatedOutfit: ApiOutfit;
+      let newOrUpdatedOutfit: Outfit;
       if (selectedOutfit) {
         // Update existing outfit
         newOrUpdatedOutfit = await updateOutfit(token, selectedOutfit.id, {
           name: data.name,
           description: data.description,
           is_public: false,
-          clothing_item_ids: data.clothingItemIds,
+          clothing_item_ids: data.clothing_item_ids,
         });
 
         setOutfits(
@@ -120,7 +139,7 @@ export function OutfitsPageClient() {
           name: data.name,
           description: data.description,
           is_public: false,
-          clothing_item_ids: data.clothingItemIds,
+          clothing_item_ids: data.clothing_item_ids,
         });
 
         setOutfits((prev) => [...prev, transformApiOutfit(newOrUpdatedOutfit)]);
@@ -192,7 +211,7 @@ export function OutfitsPageClient() {
         <Input
           placeholder="Search outfits..."
           value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -235,7 +254,7 @@ export function OutfitsPageClient() {
           setDialogOpen(isOpen);
         }}
         outfit={selectedOutfit}
-        onSubmit={handleFormSubmit}
+        onSubmit={handleFormSubmit as any}
         isSubmitting={isSubmitting}
       />
     </div>

@@ -14,8 +14,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Outfit } from "@/lib/types";
-import { ClothingItem } from "@/lib/types";
+import type { Outfit } from "@/lib/types/api";
+import type { ClothingItem } from "@/lib/types/api";
 import { getClothingItems } from "@/lib/api/clothing";
 import { useAuth } from "@/lib/context/auth-context";
 import {
@@ -28,7 +28,6 @@ import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toClothingItem } from "@/lib/utils";
 import Image from "next/image";
 
 const outfitSchema = z.object({
@@ -41,7 +40,10 @@ type OutfitFormData = z.infer<typeof outfitSchema>;
 interface OutfitFormProps {
   outfit?: Outfit;
   onSubmit: (
-    data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
+    data: Omit<
+      Outfit,
+      "id" | "user_id" | "created_at" | "updated_at" | "clothing_items"
+    > & { clothing_item_ids: number[] }
   ) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -83,7 +85,7 @@ export function OutfitForm({
       setLoading(true);
       try {
         const items = await getClothingItems(token);
-        setAvailableItems(items.map(toClothingItem));
+        setAvailableItems(items);
       } catch (error) {
         console.error("Failed to load clothing items:", error);
       } finally {
@@ -97,7 +99,8 @@ export function OutfitForm({
   const handleSubmit = (data: OutfitFormData) => {
     onSubmit({
       ...data,
-      clothingItemIds: selectedItems.map((item) => item.id),
+      is_public: outfit?.is_public ?? false,
+      clothing_item_ids: selectedItems.map((item) => item.id),
     });
   };
 
@@ -175,8 +178,8 @@ export function OutfitForm({
               <CardContent className="p-4">
                 {selectedItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    No items selected. Click "Add Items" to select clothing
-                    items for this outfit.
+                    No items selected. Click &quot;Add Items&quot; to select
+                    clothing items for this outfit.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -187,13 +190,19 @@ export function OutfitForm({
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-background rounded border flex items-center justify-center">
-                            <Image
-                              src={item.imageUrl}
-                              alt={item.name}
-                              width={40}
-                              height={40}
-                              className="rounded-md object-cover"
-                            />
+                            {item.image_url ? (
+                              <Image
+                                src={item.image_url}
+                                alt={item.name}
+                                width={40}
+                                height={40}
+                                className="rounded-md object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center">
+                                No image
+                              </div>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <div className="font-medium text-sm">
@@ -278,13 +287,19 @@ export function OutfitForm({
                   <CardContent className="p-3">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-muted rounded border flex items-center justify-center">
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.name}
-                          width={48}
-                          height={48}
-                          className="rounded-md object-cover"
-                        />
+                        {item.image_url ? (
+                          <Image
+                            src={item.image_url}
+                            alt={item.name}
+                            width={48}
+                            height={48}
+                            className="rounded-md object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
+                            No image
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{item.name}</div>

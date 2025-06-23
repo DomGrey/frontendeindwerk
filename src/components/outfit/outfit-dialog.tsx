@@ -1,6 +1,6 @@
 "use client";
 
-import { Outfit } from "@/lib/types";
+import type { Outfit } from "@/lib/types/api";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,10 @@ interface OutfitDialogProps {
   onOpenChange: (open: boolean) => void;
   outfit?: Outfit;
   onSubmit: (
-    data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
+    data: Omit<
+      Outfit,
+      "id" | "user_id" | "created_at" | "updated_at" | "clothing_items"
+    > & { clothing_item_ids: number[] }
   ) => void;
   isSubmitting?: boolean;
 }

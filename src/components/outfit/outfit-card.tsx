@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Outfit } from "@/lib/types";
+import { Outfit } from "@/lib/types/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,7 +121,7 @@ export function OutfitCard({
           </div>
           <div className="mt-3">
             <Badge variant="secondary" className="text-xs">
-              {outfit.clothingItemIds.length} items
+              {outfit.clothing_items.length} items
             </Badge>
           </div>
         </CardContent>

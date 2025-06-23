@@ -106,10 +106,15 @@ export function PhotoUpload({
         className="hidden"
         capture="environment"
       />
-      {preview ? (
+      {typeof preview === "string" && preview ? (
         <div className="relative">
           <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-lg border bg-muted">
-            <Image src={preview} alt="Preview" fill className="object-cover" />
+            <Image
+              src={preview || undefined}
+              alt="Preview"
+              fill
+              className="object-cover"
+            />
           </div>
           <Button
             type="button"

@@ -9,8 +9,7 @@ import type {
   ClothingItem as ApiClothingItem,
   ClothingItemSearchParams,
 } from "../types/api";
-import { ClothingItem } from "../types";
-import { toClothingItem } from "../utils";
+import type { ClothingItem } from "@/lib/types/api";
 
 export const getClothingItems = async (
   token: string,
@@ -45,7 +44,7 @@ export const getClothingItems = async (
     );
   }
 
-  return data.data.map(toClothingItem);
+  return data.data;
 };
 
 export const createClothingItem = async (
@@ -68,7 +67,7 @@ export const createClothingItem = async (
     );
   }
 
-  return toClothingItem(data.data);
+  return data.data;
 };
 
 export const getClothingItem = async (
@@ -89,7 +88,7 @@ export const getClothingItem = async (
     );
   }
 
-  return toClothingItem(data.data);
+  return data.data;
 };
 
 export const updateClothingItem = async (
@@ -118,7 +117,7 @@ export const updateClothingItem = async (
     );
   }
 
-  return toClothingItem(data.data);
+  return data.data;
 };
 
 export const deleteClothingItem = async (

@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData = await authApi.getMe(storedToken);
           setUser(userData);
           setToken(storedToken);
-        } catch (error) {
+        } catch {
           localStorage.removeItem(TOKEN_KEY);
         }
       }
