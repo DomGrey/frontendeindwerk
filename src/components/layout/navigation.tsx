@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard" },
-  { name: "Clothing", href: "/clothing" },
-  { name: "Outfits", href: "/outfits" },
-  { name: "Favorites", href: "/favorites" },
-  { name: "Profile", href: "/profile" },
+const navLinks = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/clothing", label: "Clothing" },
+  { href: "/outfits", label: "Outfits" },
+  { href: "/calendar", label: "Calendar" },
+  { href: "/favorites", label: "Favorites" },
 ];
 
 export function Navigation() {
@@ -17,7 +17,7 @@ export function Navigation() {
 
   return (
     <nav className="flex items-center space-x-4 lg:space-x-6">
-      {navigation.map((item) => (
+      {navLinks.map((item) => (
         <Link
           key={item.href}
           href={item.href}
@@ -26,7 +26,7 @@ export function Navigation() {
             pathname === item.href ? "text-primary" : "text-muted-foreground"
           )}
         >
-          {item.name}
+          {item.label}
         </Link>
       ))}
     </nav>

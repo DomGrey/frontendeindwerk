@@ -38,3 +38,9 @@ export interface Favorite {
   itemId: number;
   createdAt: string;
 }
+
+export interface OutfitSchedule {
+  id: number;
+  scheduledDate: string;
+  outfit: Outfit;
+}

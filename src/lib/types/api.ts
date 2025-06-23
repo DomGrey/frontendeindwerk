@@ -145,3 +145,9 @@ export const FILE_REQUIREMENTS = {
   maxSize: 5 * 1024 * 1024, // 5MB in bytes
   allowedTypes: ["image/jpeg", "image/jpg", "image/png"],
 } as const;
+
+export interface OutfitSchedule {
+  id: number;
+  scheduled_date: string;
+  outfit: Outfit;
+}

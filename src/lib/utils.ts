@@ -1,7 +1,11 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ClothingItem as ApiClothingItem } from "@/lib/types/api";
-import { ClothingItem } from "@/lib/types";
+import {
+  ClothingItem as ApiClothingItem,
+  Outfit as ApiOutfit,
+  OutfitSchedule as ApiOutfitSchedule,
+} from "@/lib/types/api";
+import { ClothingItem, Outfit, OutfitSchedule } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api/config";
 
 export function cn(...inputs: ClassValue[]) {
@@ -32,6 +36,29 @@ export function toClothingItem(apiItem: ApiClothingItem): ClothingItem {
     updatedAt: apiItem.updated_at,
   };
 }
+
+export function toOutfit(apiOutfit: ApiOutfit): Outfit {
+  return {
+    id: apiOutfit.id,
+    name: apiOutfit.name,
+    description: apiOutfit.description,
+    clothingItemIds: (apiOutfit.clothing_items || []).map((item) => item.id),
+    userId: apiOutfit.user_id,
+    createdAt: apiOutfit.created_at,
+    updatedAt: apiOutfit.updated_at,
+  };
+}
+
+export function toOutfitSchedule(
+  apiSchedule: ApiOutfitSchedule
+): OutfitSchedule {
+  return {
+    id: apiSchedule.id,
+    scheduledDate: apiSchedule.scheduled_date,
+    outfit: toOutfit(apiSchedule.outfit),
+  };
+}
+
 const RECENTLY_VIEWED_KEY = "recentlyViewedClothing";
 const MAX_RECENT_ITEMS = 8;
 
