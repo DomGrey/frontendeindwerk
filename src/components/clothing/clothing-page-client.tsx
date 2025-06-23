@@ -134,10 +134,11 @@ export function ClothingPageClient() {
       }
       setDialogOpen(false);
       setSelectedItem(undefined);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to submit form:", error);
       const errorMessage =
-        error.response?.data?.message || "An unexpected error occurred.";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "An unexpected error occurred.";
       toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);

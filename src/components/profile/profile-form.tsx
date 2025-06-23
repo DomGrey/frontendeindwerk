@@ -110,7 +110,7 @@ export function ProfileForm({
         />
         <div className="pt-4">
           <p className="text-sm text-muted-foreground">
-            Leave the fields below blank if you don't want to change your
+            Leave the fields below blank if you don&apos;t want to change your
             password.
           </p>
         </div>

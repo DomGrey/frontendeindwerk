@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import type { Outfit as ApiOutfit } from "@/lib/types/api";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { Favorite } from "@/lib/types/api";
 
 export function OutfitsPageClient() {
   const { token } = useAuth();
@@ -58,7 +59,7 @@ export function OutfitsPageClient() {
       if (Array.isArray(favoritesData)) {
         favoritedIdsSet = new Set(
           favoritesData
-            .map((favorite: any) => favorite.favoritable_id || favorite.id)
+            .map((favorite: Favorite) => favorite.favoritable_id || favorite.id)
             .filter(Boolean)
         );
       }

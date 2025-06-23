@@ -29,7 +29,8 @@ export function EditProfileDialog({
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
-            Update your profile information below. Click save when you're done.
+            Update your profile information below. Click save when you&apos;re
+            done.
           </DialogDescription>
         </DialogHeader>
         <p className="text-sm text-muted-foreground mb-4">
