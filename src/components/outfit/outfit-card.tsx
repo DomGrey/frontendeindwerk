@@ -47,7 +47,6 @@ export function OutfitCard({
 
   const handleDelete = async () => {
     if (!token) return;
-
     setIsDeleting(true);
     try {
       await deleteOutfit(token, outfit.id);
@@ -55,7 +54,7 @@ export function OutfitCard({
       if (onDelete) {
         onDelete();
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete outfit");
     } finally {
       setIsDeleting(false);

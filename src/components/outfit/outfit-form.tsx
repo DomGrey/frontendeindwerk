@@ -29,7 +29,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toClothingItem } from "@/lib/utils";
-import type { ClothingItem as ApiClothingItem } from "@/lib/types/api";
+import Image from "next/image";
 
 const outfitSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -187,17 +187,13 @@ export function OutfitForm({
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-background rounded border flex items-center justify-center">
-                            {item.imageUrl ? (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.name}
-                                className="w-8 h-8 object-cover rounded"
-                              />
-                            ) : (
-                              <span className="text-xs text-muted-foreground">
-                                📷
-                              </span>
-                            )}
+                            <Image
+                              src={item.imageUrl}
+                              alt={item.name}
+                              width={40}
+                              height={40}
+                              className="rounded-md object-cover"
+                            />
                           </div>
                           <div className="space-y-1">
                             <div className="font-medium text-sm">
@@ -282,17 +278,13 @@ export function OutfitForm({
                   <CardContent className="p-3">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-muted rounded border flex items-center justify-center">
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name}
-                            className="w-10 h-10 object-cover rounded"
-                          />
-                        ) : (
-                          <span className="text-lg text-muted-foreground">
-                            📷
-                          </span>
-                        )}
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.name}
+                          width={48}
+                          height={48}
+                          className="rounded-md object-cover"
+                        />
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{item.name}</div>

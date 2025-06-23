@@ -8,7 +8,6 @@ import type {
   ApiResponse,
   ClothingItem as ApiClothingItem,
   ClothingItemSearchParams,
-  CreateClothingItemData,
 } from "../types/api";
 import { ClothingItem } from "../types";
 import { toClothingItem } from "../utils";

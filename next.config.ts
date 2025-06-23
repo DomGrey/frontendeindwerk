@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "laraveleindwerk.ddev.site",
       },
+      {
+        protocol: "https",
+        hostname: "closet-app-su7ez.ondigitalocean.app",
+      },
     ],
   },
 };

@@ -160,6 +160,17 @@ export function ClothingPageClient() {
     setAllItems((prev) => prev.filter((item) => item.id !== itemId));
   };
 
+  const handleSearch = (searchTerm: string) => {
+    setSearchQuery(searchTerm);
+    const filtered = allItems.filter(
+      (item: ClothingItem) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setAllItems(filtered);
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col gap-4 mb-8">
@@ -172,7 +183,7 @@ export function ClothingPageClient() {
             <Input
               placeholder="Search for items..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
           <div className="flex items-end gap-4">

@@ -32,6 +32,9 @@ export function EditProfileDialog({
             Update your profile information below. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
+        <p className="text-sm text-muted-foreground mb-4">
+          Update your profile information and preferences.
+        </p>
         <ProfileForm
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}

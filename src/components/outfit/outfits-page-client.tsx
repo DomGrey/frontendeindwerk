@@ -28,6 +28,7 @@ export function OutfitsPageClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [filteredOutfits, setFilteredOutfits] = useState<Outfit[]>([]);
 
   const transformApiOutfit = (apiOutfit: ApiOutfit): Outfit => ({
     id: apiOutfit.id,
@@ -74,12 +75,15 @@ export function OutfitsPageClient() {
     fetchData();
   }, [fetchData]);
 
-  const filteredOutfits = useMemo(() => {
-    if (!searchQuery) return outfits;
-    return outfits.filter((outfit) =>
-      outfit.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleSearch = (searchTerm: string) => {
+    setSearchQuery(searchTerm);
+    const filtered = outfits.filter(
+      (outfit: Outfit) =>
+        outfit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        outfit.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [outfits, searchQuery]);
+    setFilteredOutfits(filtered);
+  };
 
   const handleFormSubmit = async (
     data: Omit<Outfit, "id" | "userId" | "createdAt" | "updatedAt">
@@ -187,7 +191,7 @@ export function OutfitsPageClient() {
         <Input
           placeholder="Search outfits..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
         />
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

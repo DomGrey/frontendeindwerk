@@ -8,6 +8,9 @@ import { getFavorites, removeFavorite } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import type { Favorite as ApiFavorite } from "@/lib/types/api";
+import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function FavoritesPageClient() {
   const { token } = useAuth();
@@ -15,6 +18,11 @@ export function FavoritesPageClient() {
     (ClothingItem | (Outfit & { type: "clothing" | "outfit" }))[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredFavorites, setFilteredFavorites] = useState<
+    (ClothingItem | (Outfit & { type: "clothing" | "outfit" }))[]
+  >([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -81,6 +89,7 @@ export function FavoritesPageClient() {
 
         console.log("Final transformed favorites:", transformedFavorites);
         setFavorites(transformedFavorites);
+        setFilteredFavorites(transformedFavorites);
       } catch (error) {
         console.error("Failed to fetch favorites:", error);
         toast.error("Failed to load favorites");
@@ -117,6 +126,19 @@ export function FavoritesPageClient() {
     }
   };
 
+  const handleSearch = (searchTerm: string) => {
+    setSearchTerm(searchTerm);
+    const filtered = favorites.filter(
+      (favorite: ClothingItem | Outfit) =>
+        favorite.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ("brand" in favorite &&
+          favorite.brand?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        ("category" in favorite &&
+          favorite.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredFavorites(filtered);
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-6">Favorites</h1>
@@ -135,13 +157,18 @@ export function FavoritesPageClient() {
             </div>
           ))
         ) : favorites.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <p className="text-lg text-muted-foreground">
-              You haven't added any favorites yet
+          <div className="text-center py-12">
+            <Heart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No favorites yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Start adding items to your favorites to see them here
             </p>
+            <Button onClick={() => router.push("/clothing")}>
+              Browse Clothing Items
+            </Button>
           </div>
         ) : (
-          favorites.map((item) =>
+          filteredFavorites.map((item) =>
             item.type === "clothing" ? (
               <ClothingItemCard
                 key={`clothing-${item.id}`}

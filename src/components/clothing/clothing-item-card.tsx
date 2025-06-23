@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ClothingItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -55,7 +55,7 @@ export function ClothingItemCard({
       if (onDelete) {
         onDelete();
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete clothing item");
     } finally {
       setIsDeleting(false);
