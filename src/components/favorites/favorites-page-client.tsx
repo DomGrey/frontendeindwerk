@@ -18,7 +18,6 @@ export function FavoritesPageClient() {
     (ClothingItem | (Outfit & { type: "clothing" | "outfit" }))[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [filteredFavorites, setFilteredFavorites] = useState<
     (ClothingItem | (Outfit & { type: "clothing" | "outfit" }))[]
   >([]);
@@ -124,19 +123,6 @@ export function FavoritesPageClient() {
       console.error("Failed to remove favorite:", error);
       toast.error("Failed to remove from favorites");
     }
-  };
-
-  const handleSearch = (searchTerm: string) => {
-    setSearchTerm(searchTerm);
-    const filtered = favorites.filter(
-      (favorite: ClothingItem | Outfit) =>
-        favorite.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ("brand" in favorite &&
-          favorite.brand?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        ("category" in favorite &&
-          favorite.category.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    setFilteredFavorites(filtered);
   };
 
   return (

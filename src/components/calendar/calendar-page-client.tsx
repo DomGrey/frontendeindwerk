@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { OutfitCard } from "@/components/outfit/outfit-card";
-import { OutfitSchedule, Outfit } from "@/lib/types";
+import { OutfitSchedule } from "@/lib/types";
 import { useAuth } from "@/lib/context/auth-context";
 import {
   getOutfitSchedules,
