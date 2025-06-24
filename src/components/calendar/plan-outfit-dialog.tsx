@@ -16,6 +16,7 @@ import { scheduleOutfit } from "@/lib/api/outfit-schedules";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import type { Outfit } from "@/lib/types/api";
+import { Input } from "@/components/ui/input";
 
 type PlanOutfitDialogProps = {
   open: boolean;
@@ -34,6 +35,7 @@ export default function PlanOutfitDialog({
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!open || !token) return;
@@ -58,21 +60,31 @@ export default function PlanOutfitDialog({
     }
   };
 
+  const filteredOutfits = search
+    ? outfits.filter((o) => o.name.toLowerCase().includes(search.toLowerCase()))
+    : outfits;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Select an Outfit</DialogTitle>
         </DialogHeader>
+        <Input
+          placeholder="Search outfits..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-4"
+        />
         <div className="grid gap-4 max-h-80 overflow-y-auto">
           {loading ? (
             <div className="text-center">Loading...</div>
-          ) : outfits.length === 0 ? (
+          ) : filteredOutfits.length === 0 ? (
             <div className="text-center text-muted-foreground">
               No outfits found
             </div>
           ) : (
-            outfits.map((outfit) => (
+            filteredOutfits.map((outfit) => (
               <button
                 key={outfit.id}
                 type="button"
