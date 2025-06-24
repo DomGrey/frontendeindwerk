@@ -67,11 +67,11 @@ export function ProfileForm({
     const dataToSubmit: UpdateProfileData = {
       name: data.name,
       email: data.email,
+      ...(data.password && {
+        password: data.password,
+        password_confirmation: data.password_confirmation,
+      }),
     };
-    if (data.password) {
-      dataToSubmit.password = data.password;
-      dataToSubmit.password_confirmation = data.password_confirmation;
-    }
     onSubmit(dataToSubmit);
   };
 
