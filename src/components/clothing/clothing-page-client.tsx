@@ -40,8 +40,6 @@ export function ClothingPageClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [options, setOptions] = useState<ClothingItemOptions | null>(null);
-  const [optionsLoading, setOptionsLoading] = useState(true);
-  const [optionsError, setOptionsError] = useState<string | null>(null);
   const [filters, setFilters] = useState<{
     category?: ClothingCategory;
     color?: string;
@@ -51,12 +49,9 @@ export function ClothingPageClient() {
 
   useEffect(() => {
     if (!token) return;
-    setOptionsLoading(true);
-    setOptionsError(null);
     getClothingItemOptions(token)
       .then((opts) => setOptions(opts))
-      .catch(() => setOptionsError("Failed to load options"))
-      .finally(() => setOptionsLoading(false));
+      .catch(() => console.error("Failed to load options"));
   }, [token]);
 
   const fetchFavorites = useCallback(async () => {
@@ -171,17 +166,6 @@ export function ClothingPageClient() {
 
   const handleDeleteItem = (itemId: number) => {
     setAllItems((prev) => prev.filter((item) => item.id !== itemId));
-  };
-
-  const handleSearch = (searchTerm: string) => {
-    setSearchQuery(searchTerm);
-    const filtered = allItems.filter(
-      (item: ClothingItem) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setAllItems(filtered);
   };
 
   return (

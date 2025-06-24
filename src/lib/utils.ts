@@ -14,15 +14,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-function getImageUrl(imagePath?: string): string {
-  if (!imagePath) return "";
-
-  // The API_BASE_URL might be http://localhost:3000/api or http://localhost:8000/api
-  // Images are served from the /storage path at the root of the API domain.
-  const baseUrl = API_BASE_URL.replace("/api", "");
-  return `${baseUrl}/storage/${imagePath}`;
-}
-
 export function toClothingItem(apiItem: ApiClothingItem): ClothingItem {
   return apiItem;
 }

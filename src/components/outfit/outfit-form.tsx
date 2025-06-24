@@ -29,7 +29,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
-import { Select } from "@/components/ui/select";
 
 const outfitSchema = z.object({
   name: z.string().min(1, "Name is required"),

@@ -93,16 +93,6 @@ export function OutfitsPageClient() {
     }
   }, [outfits, searchQuery]);
 
-  const handleSearch = (searchTerm: string) => {
-    setSearchQuery(searchTerm);
-    const filtered = outfits.filter(
-      (outfit: Outfit) =>
-        outfit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        outfit.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredOutfits(filtered);
-  };
-
   const handleFormSubmit = async (
     data: Omit<
       Outfit,
@@ -262,7 +252,7 @@ export function OutfitsPageClient() {
           setDialogOpen(isOpen);
         }}
         outfit={selectedOutfit}
-        onSubmit={handleFormSubmit as any}
+        onSubmit={handleFormSubmit}
         isSubmitting={isSubmitting}
       />
     </div>

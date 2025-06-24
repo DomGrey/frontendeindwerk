@@ -7,7 +7,7 @@ import { getOutfits } from "@/lib/api/outfits";
 import { getFavorites } from "@/lib/api/favorites";
 import { getOutfitSchedules } from "@/lib/api/outfit-schedules";
 import Link from "next/link";
-import { Shirt, Clapperboard, Heart } from "lucide-react";
+import { Shirt, Heart } from "lucide-react";
 import { Icon } from "lucide-react";
 import { coatHanger } from "@lucide/lab";
 import { ClothingItem, OutfitSchedule } from "@/lib/types/api";
