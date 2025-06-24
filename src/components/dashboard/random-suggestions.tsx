@@ -1,6 +1,6 @@
 "use client";
 
-import { ClothingItem } from "@/lib/types";
+import { ClothingItem } from "@/lib/types/api";
 import { DashboardItemCard } from "./dashboard-item-card";
 import { Sparkles } from "lucide-react";
 import { getRandomItems } from "@/lib/utils";
