@@ -197,3 +197,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.calendar-day-scheduled {
+  position: relative;
+}
+.calendar-day-scheduled::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  background: #10b981; /* Tailwind emerald-500 */
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+}

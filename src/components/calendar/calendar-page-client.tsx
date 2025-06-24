@@ -5,7 +5,8 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { OutfitCard } from "@/components/outfit/outfit-card";
-import { OutfitSchedule } from "@/lib/types";
+import { CalendarCheck2 } from "lucide-react";
+
 import { useAuth } from "@/lib/context/auth-context";
 import {
   getOutfitSchedules,
@@ -13,6 +14,8 @@ import {
 } from "@/lib/api/outfit-schedules";
 import { toOutfitSchedule } from "@/lib/utils";
 import { toast } from "react-toastify";
+import type { OutfitSchedule } from "@/lib/types/api";
+import PlanOutfitDialog from "./plan-outfit-dialog";
 
 export function CalendarPageClient() {
   const { token } = useAuth();
@@ -21,6 +24,7 @@ export function CalendarPageClient() {
   const [schedules, setSchedules] = useState<Record<string, OutfitSchedule>>(
     {}
   );
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
 
   const selectedDateStr = date ? format(date, "yyyy-MM-dd") : "";
   const selectedSchedule = schedules[selectedDateStr];
@@ -38,14 +42,26 @@ export function CalendarPageClient() {
           startDate,
           endDate
         );
+
+        console.log("Raw API response:", apiSchedules);
+
+        if (!apiSchedules || !Array.isArray(apiSchedules)) {
+          console.warn("Invalid schedules data received:", apiSchedules);
+          return;
+        }
+
         const newSchedules = apiSchedules.reduce((acc, apiSchedule) => {
           const schedule = toOutfitSchedule(apiSchedule);
-          acc[schedule.scheduledDate] = schedule;
+          const key = schedule.scheduled_date.slice(0, 10);
+          acc[key] = schedule;
           return acc;
         }, {} as Record<string, OutfitSchedule>);
         setSchedules((prev) => ({ ...prev, ...newSchedules }));
       } catch (error) {
         console.error("Failed to fetch schedules:", error);
+        if (error instanceof Error) {
+          console.error("Error details:", error.message);
+        }
         toast.error("Could not load outfit schedules.");
       }
     },
@@ -73,16 +89,20 @@ export function CalendarPageClient() {
     }
   };
 
-  const scheduledDays = Object.keys(schedules).map(
-    (dateStr) => new Date(dateStr.replace(/-/g, "/"))
-  );
+  const scheduledDays = Object.keys(schedules).map((dateStr) => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  });
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Outfit Calendar</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
-          <div className="rounded-lg border">
+      <h1 className="text-3xl font-bold mb-2">Outfit Calendar</h1>
+      <h2 className="text-2xl font-semibold mb-8">
+        Planned for {date ? format(date, "MMMM d, yyyy") : "..."}
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+        <div className="md:col-span-1 flex flex-col items-start">
+          <div className="rounded-lg border bg-white shadow-sm w-full">
             <Calendar
               mode="single"
               selected={date}
@@ -91,28 +111,14 @@ export function CalendarPageClient() {
               onMonthChange={setCurrentMonth}
               className="p-3"
               modifiers={{ scheduled: scheduledDays }}
-              modifiersClassnames={{
-                scheduled: "day-scheduled",
+              modifiersClassNames={{
+                scheduled: "calendar-day-scheduled",
               }}
             />
           </div>
         </div>
         <div className="md:col-span-2">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">
-              Planned for {date ? format(date, "MMMM d, yyyy") : "..."}
-            </h2>
-            {selectedSchedule && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleUnschedule}
-              >
-                Unschedule
-              </Button>
-            )}
-          </div>
-          <div className="rounded-lg border p-4 min-h-[300px] flex items-center justify-center">
+          <div className="rounded-lg border p-8 min-h-[320px] flex items-center justify-center bg-white shadow-sm">
             {selectedSchedule ? (
               <div className="w-full max-w-sm">
                 <OutfitCard
@@ -123,16 +129,25 @@ export function CalendarPageClient() {
                 />
               </div>
             ) : (
-              <div className="text-center">
+              <div className="flex flex-col items-center">
+                <CalendarCheck2 className="w-10 h-10 text-muted-foreground mb-2" />
                 <p className="text-muted-foreground mb-4">
                   No outfit planned for this date.
                 </p>
-                <Button>Plan an Outfit</Button>
+                <Button onClick={() => setPlanDialogOpen(true)}>
+                  Plan an Outfit
+                </Button>
               </div>
             )}
           </div>
         </div>
       </div>
+      <PlanOutfitDialog
+        open={planDialogOpen}
+        onOpenChange={setPlanDialogOpen}
+        date={selectedDateStr}
+        onPlanned={() => fetchSchedules(currentMonth)}
+      />
     </div>
   );
 }

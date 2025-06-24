@@ -18,14 +18,30 @@ export const getOutfitSchedules = async (
     }
   );
 
-  const data: ApiResponse<OutfitSchedule[]> = await response.json();
+  const rawData = await response.json();
+  console.log("Raw API response for schedules:", rawData);
 
-  if (!response.ok || data.error) {
+  if (!response.ok) {
     throw new ApiError(
-      data.error?.message || "Failed to fetch outfit schedules",
-      data.error?.code || "FETCH_ERROR",
+      rawData.error?.message || "Failed to fetch outfit schedules",
+      rawData.error?.code || "FETCH_ERROR",
       response.status
     );
+  }
+
+  const data: ApiResponse<OutfitSchedule[]> = rawData;
+
+  if (data.error) {
+    throw new ApiError(
+      data.error.message || "Failed to fetch outfit schedules",
+      data.error.code || "FETCH_ERROR",
+      response.status
+    );
+  }
+
+  if (!data.data || !Array.isArray(data.data)) {
+    console.warn("Invalid data structure received:", data);
+    return [];
   }
 
   return data.data;
@@ -41,7 +57,7 @@ export const scheduleOutfit = async (
     headers: getHeaders(token),
     body: JSON.stringify({
       outfit_id: outfitId,
-      scheduled_date: scheduledDate,
+      date: scheduledDate,
     }),
   });
 

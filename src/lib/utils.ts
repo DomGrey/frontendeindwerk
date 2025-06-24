@@ -4,8 +4,10 @@ import {
   ClothingItem as ApiClothingItem,
   Outfit as ApiOutfit,
   OutfitSchedule as ApiOutfitSchedule,
+  ClothingItem,
+  Outfit,
+  OutfitSchedule,
 } from "@/lib/types/api";
-import { ClothingItem, Outfit, OutfitSchedule } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api/config";
 
 export function cn(...inputs: ClassValue[]) {
@@ -22,31 +24,11 @@ function getImageUrl(imagePath?: string): string {
 }
 
 export function toClothingItem(apiItem: ApiClothingItem): ClothingItem {
-  return {
-    id: apiItem.id,
-    name: apiItem.name,
-    category: apiItem.category,
-    season: apiItem.season,
-    color: apiItem.color,
-    brand: apiItem.brand,
-    size: apiItem.size,
-    imageUrl: getImageUrl(apiItem.image_path),
-    userId: apiItem.user_id,
-    createdAt: apiItem.created_at,
-    updatedAt: apiItem.updated_at,
-  };
+  return apiItem;
 }
 
 export function toOutfit(apiOutfit: ApiOutfit): Outfit {
-  return {
-    id: apiOutfit.id,
-    name: apiOutfit.name,
-    description: apiOutfit.description,
-    clothingItemIds: (apiOutfit.clothing_items || []).map((item) => item.id),
-    userId: apiOutfit.user_id,
-    createdAt: apiOutfit.created_at,
-    updatedAt: apiOutfit.updated_at,
-  };
+  return apiOutfit;
 }
 
 export function toOutfitSchedule(
@@ -54,7 +36,7 @@ export function toOutfitSchedule(
 ): OutfitSchedule {
   return {
     id: apiSchedule.id,
-    scheduledDate: apiSchedule.scheduled_date,
+    scheduled_date: apiSchedule.scheduled_date,
     outfit: toOutfit(apiSchedule.outfit),
   };
 }
