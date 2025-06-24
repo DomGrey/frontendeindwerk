@@ -5,13 +5,15 @@ import { useAuth } from "@/lib/context/auth-context";
 import { getClothingItems } from "@/lib/api/clothing";
 import { getOutfits } from "@/lib/api/outfits";
 import { getFavorites } from "@/lib/api/favorites";
+import { getOutfitSchedules } from "@/lib/api/outfit-schedules";
 import Link from "next/link";
 import { Shirt, Clapperboard, Heart } from "lucide-react";
 import { Icon } from "lucide-react";
 import { coatHanger } from "@lucide/lab";
-import { ClothingItem } from "@/lib/types/api";
+import { ClothingItem, OutfitSchedule } from "@/lib/types/api";
 import { DashboardItemCard } from "./dashboard-item-card";
 import { RandomSuggestions } from "./random-suggestions";
+import { format } from "date-fns";
 
 interface StatCardProps {
   title: string;
@@ -39,6 +41,9 @@ export function DashboardPageClient() {
   const [stats, setStats] = useState({ clothing: 0, outfits: 0, favorites: 0 });
   const [recentItems, setRecentItems] = useState<ClothingItem[]>([]);
   const [allClothingItems, setAllClothingItems] = useState<ClothingItem[]>([]);
+  const [scheduledOutfits, setScheduledOutfits] = useState<OutfitSchedule[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,17 +51,26 @@ export function DashboardPageClient() {
       if (!token) return;
 
       try {
-        const [clothingItemsResponse, outfitsResponse, favoritesResponse] =
-          await Promise.all([
-            getClothingItems(token),
-            getOutfits(token),
-            getFavorites(token),
-          ]);
+        const [
+          clothingItemsResponse,
+          outfitsResponse,
+          favoritesResponse,
+          schedulesResponse,
+        ] = await Promise.all([
+          getClothingItems(token),
+          getOutfits(token),
+          getFavorites(token),
+          getOutfitSchedules(
+            token,
+            format(new Date(), "yyyy-MM-dd"),
+            "2100-01-01"
+          ),
+        ]);
 
         const allClothingItems: ClothingItem[] = clothingItemsResponse.data;
         const sortedItems = [...allClothingItems].sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
         setStats({
@@ -67,6 +81,14 @@ export function DashboardPageClient() {
 
         setRecentItems(sortedItems.slice(0, 4));
         setAllClothingItems(allClothingItems);
+
+        // Only future schedules (today or later)
+        const now = new Date();
+        setScheduledOutfits(
+          (schedulesResponse || []).filter(
+            (s: OutfitSchedule) => new Date(s.scheduled_date) >= now
+          )
+        );
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -137,6 +159,55 @@ export function DashboardPageClient() {
             >
               Add your first item
             </Link>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-4">Scheduled Outfits</h2>
+        {isLoading ? (
+          <div className="grid gap-6 grid-cols-2 md:grid-cols-4">
+            <div className="h-48 rounded-lg bg-card border shadow animate-pulse" />
+            <div className="h-48 rounded-lg bg-card border shadow animate-pulse" />
+            <div className="h-48 rounded-lg bg-card border shadow animate-pulse" />
+            <div className="h-48 rounded-lg bg-card border shadow animate-pulse" />
+          </div>
+        ) : scheduledOutfits.length > 0 ? (
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {scheduledOutfits.map((schedule: OutfitSchedule) => {
+              const imageUrl =
+                schedule.outfit.clothing_items[0]?.image_url ||
+                "/placeholder.svg";
+              return (
+                <div
+                  key={schedule.id}
+                  className="rounded-lg border bg-card p-4 flex flex-col items-center"
+                >
+                  <div className="w-full max-w-xs flex flex-col items-center">
+                    <img
+                      src={imageUrl}
+                      alt={schedule.outfit.name}
+                      className="w-24 h-24 object-cover rounded mb-2"
+                    />
+                    <div className="font-semibold mb-1">
+                      {schedule.outfit.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      {format(
+                        new Date(schedule.scheduled_date),
+                        "MMMM d, yyyy"
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 rounded-lg border-2 border-dashed border-muted-foreground/30">
+            <p className="text-muted-foreground">
+              No upcoming outfits scheduled.
+            </p>
           </div>
         )}
       </div>

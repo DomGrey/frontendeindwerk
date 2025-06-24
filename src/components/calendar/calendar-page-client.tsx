@@ -120,19 +120,22 @@ export function CalendarPageClient() {
         <div className="md:col-span-2">
           <div className="rounded-lg border p-8 min-h-[320px] flex items-center justify-center bg-white shadow-sm">
             {selectedSchedule ? (
-              <button
-                type="button"
-                className="w-full max-w-sm outline-none focus:ring-2 focus:ring-primary rounded"
-                onClick={() => setPlanDialogOpen(true)}
-                tabIndex={0}
-              >
+              <div className="w-full max-w-sm flex flex-col items-center gap-2">
                 <OutfitCard
                   outfit={selectedSchedule.outfit}
                   isFavorited={false}
                   onFavorite={() => {}}
                   onDelete={() => {}}
                 />
-              </button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnschedule}
+                  className="mt-2"
+                >
+                  Remove
+                </Button>
+              </div>
             ) : (
               <div className="flex flex-col items-center">
                 <CalendarCheck2 className="w-10 h-10 text-muted-foreground mb-2" />
