@@ -1,4 +1,4 @@
-import { ClothingItem } from "@/lib/types";
+import { ClothingItem } from "@/lib/types/api";
 import { DashboardItemCard } from "./dashboard-item-card";
 import { Eye } from "lucide-react";
 
