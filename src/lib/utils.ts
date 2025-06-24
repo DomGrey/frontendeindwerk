@@ -8,7 +8,6 @@ import {
   Outfit,
   OutfitSchedule,
 } from "@/lib/types/api";
-import { API_BASE_URL } from "@/lib/api/config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
