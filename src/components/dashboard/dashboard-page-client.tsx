@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Shirt, Clapperboard, Heart } from "lucide-react";
 import { Icon } from "lucide-react";
 import { coatHanger } from "@lucide/lab";
-import { ClothingItem } from "@/lib/types";
+import { ClothingItem } from "@/lib/types/api";
 import { DashboardItemCard } from "./dashboard-item-card";
 import { RandomSuggestions } from "./random-suggestions";
 
