@@ -14,6 +14,7 @@ import { ClothingItem, OutfitSchedule } from "@/lib/types/api";
 import { DashboardItemCard } from "./dashboard-item-card";
 import { RandomSuggestions } from "./random-suggestions";
 import { format } from "date-fns";
+import Image from "next/image";
 
 interface StatCardProps {
   title: string;
@@ -184,9 +185,11 @@ export function DashboardPageClient() {
                   className="rounded-lg border bg-card p-4 flex flex-col items-center"
                 >
                   <div className="w-full max-w-xs flex flex-col items-center">
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={schedule.outfit.name}
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover rounded mb-2"
                     />
                     <div className="font-semibold mb-1">

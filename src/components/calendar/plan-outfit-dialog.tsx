@@ -51,7 +51,9 @@ export default function PlanOutfitDialog({
     try {
       await scheduleOutfit(token, selected, date);
       toast.success("Outfit planned");
-      onPlanned && onPlanned();
+      if (onPlanned) {
+        onPlanned();
+      }
       onOpenChange(false);
     } catch {
       toast.error("Failed to plan outfit");

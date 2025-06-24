@@ -118,7 +118,7 @@ export function ClothingItemForm({
     setOptionsError(null);
     getClothingItemOptions(token)
       .then((opts) => setOptions(opts))
-      .catch((err) => setOptionsError("Failed to load options"))
+      .catch(() => setOptionsError("Failed to load options"))
       .finally(() => setOptionsLoading(false));
   }, [token]);
 
