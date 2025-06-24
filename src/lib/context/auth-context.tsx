@@ -55,9 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const response = await authApi.login(credentials);
-      localStorage.setItem(TOKEN_KEY, response.data.token);
-      setToken(response.data.token);
-      setUser(response.data.user);
+      localStorage.setItem(TOKEN_KEY, response.data.data.token);
+      setToken(response.data.data.token);
+      setUser(response.data.data.user);
       router.push("/dashboard");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Login failed");
@@ -72,9 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
       const { data } = await authApi.register(credentials);
-      localStorage.setItem(TOKEN_KEY, data.token);
-      setToken(data.token);
-      setUser(data.user);
+      localStorage.setItem(TOKEN_KEY, data.data.token);
+      setToken(data.data.token);
+      setUser(data.data.user);
       router.push("/dashboard");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Registration failed");
