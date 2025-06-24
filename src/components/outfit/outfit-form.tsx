@@ -59,7 +59,9 @@ export function OutfitForm({
   const { token } = useAuth();
   const [showItemSelector, setShowItemSelector] = useState(false);
   const [availableItems, setAvailableItems] = useState<ClothingItem[]>([]);
-  const [selectedItems, setSelectedItems] = useState<ClothingItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<ClothingItem[]>(
+    Array.from(outfit?.clothing_items || [])
+  );
   const [loading, setLoading] = useState(false);
 
   const form = useForm<OutfitFormData>({
@@ -76,7 +78,7 @@ export function OutfitForm({
         name: outfit.name,
         description: outfit.description || "",
       });
-      setSelectedItems([]);
+      setSelectedItems(Array.from(outfit.clothing_items || []));
     }
   }, [outfit, form]);
 
