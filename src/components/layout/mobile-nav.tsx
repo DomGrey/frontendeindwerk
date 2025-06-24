@@ -9,6 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Clothing", href: "/clothing" },
   { name: "Outfits", href: "/outfits" },
+  { name: "Calendar", href: "/calendar" },
   { name: "Favorites", href: "/favorites" },
   { name: "Profile", href: "/profile" },
 ];
@@ -45,11 +48,14 @@ export function MobileNav() {
           </svg>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+      <SheetContent side="left">
         <SheetHeader>
           <SheetTitle>Virtual Closet</SheetTitle>
+          <SheetDescription className="sr-only">
+            Main navigation for the Virtual Closet app.
+          </SheetDescription>
         </SheetHeader>
-        <nav className="flex flex-col space-y-4 mt-4">
+        <nav className="flex flex-col space-y-4 mt-4 pl-4">
           {navigation.map((item) => (
             <Link
               key={item.href}

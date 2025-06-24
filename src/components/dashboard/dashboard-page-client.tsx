@@ -7,6 +7,8 @@ import { getOutfits } from "@/lib/api/outfits";
 import { getFavorites } from "@/lib/api/favorites";
 import Link from "next/link";
 import { Shirt, Clapperboard, Heart } from "lucide-react";
+import { Icon } from "lucide-react";
+import { coatHanger } from "@lucide/lab";
 import { ClothingItem } from "@/lib/types";
 import { DashboardItemCard } from "./dashboard-item-card";
 import { RandomSuggestions } from "./random-suggestions";
@@ -97,7 +99,7 @@ export function DashboardPageClient() {
               title="Outfits"
               count={stats.outfits}
               href="/outfits"
-              icon={<Clapperboard className="h-8 w-8" />}
+              icon={<Icon iconNode={coatHanger} className="h-8 w-8" />}
             />
             <StatCard
               title="Favorites"
