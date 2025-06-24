@@ -9,7 +9,12 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { ClothingItem, Outfit, Favorite } from "@/lib/types/api";
+import type { Favorite } from "@/lib/types/api";
+import {
+  isClothingItemFavorite,
+  isOutfitFavorite,
+  isDeletedFavorite,
+} from "@/lib/types/api";
 
 export function FavoritesPageClient() {
   const { token } = useAuth();
@@ -21,8 +26,8 @@ export function FavoritesPageClient() {
     const fetchFavorites = async () => {
       try {
         if (!token) return;
-        const data = await getFavorites(token);
-        setFavorites(data || []);
+        const response = await getFavorites(token);
+        setFavorites(response.data || []);
       } catch (error) {
         console.error("Failed to fetch favorites:", error);
         toast.error("Failed to load favorites");
@@ -85,23 +90,22 @@ export function FavoritesPageClient() {
           </div>
         ) : (
           favorites.map((favorite) => {
-            const favoritable = favorite.favoritable as
-              | ClothingItem
-              | Outfit
-              | { id: number; status: string; message?: string };
-            if ("status" in favoritable && favoritable.status === "deleted") {
+            if (isDeletedFavorite(favorite)) {
               return (
                 <div
                   key={`deleted-${favorite.id}`}
                   className="rounded-lg border bg-muted p-6 text-center text-muted-foreground"
                 >
-                  <p>{favoritable.message || "This item has been deleted."}</p>
+                  <p>
+                    {favorite.favoritable.message ||
+                      "This item has been deleted."}
+                  </p>
                   <Button
                     variant="outline"
                     className="mt-2"
                     onClick={() =>
                       handleRemoveFavorite(
-                        favoritable.id,
+                        favorite.favoritable.id,
                         favorite.favoritable_type
                       )
                     }
@@ -111,26 +115,29 @@ export function FavoritesPageClient() {
                 </div>
               );
             }
-            if (favorite.favoritable_type === "clothing_item") {
+            if (isClothingItemFavorite(favorite)) {
               return (
                 <ClothingItemCard
-                  key={`clothing-${favoritable.id}`}
-                  item={favoritable as ClothingItem}
+                  key={`clothing-${favorite.favoritable.id}`}
+                  item={favorite.favoritable}
                   onFavorite={() =>
-                    handleRemoveFavorite(favoritable.id, "clothing_item")
+                    handleRemoveFavorite(
+                      favorite.favoritable.id,
+                      "clothing_item"
+                    )
                   }
                   onDelete={() => {}}
                   isFavorited={true}
                 />
               );
             }
-            if (favorite.favoritable_type === "outfit") {
+            if (isOutfitFavorite(favorite)) {
               return (
                 <OutfitCard
-                  key={`outfit-${favoritable.id}`}
-                  outfit={favoritable as Outfit}
+                  key={`outfit-${favorite.favoritable.id}`}
+                  outfit={favorite.favoritable}
                   onFavorite={() =>
-                    handleRemoveFavorite(favoritable.id, "outfit")
+                    handleRemoveFavorite(favorite.favoritable.id, "outfit")
                   }
                   onDelete={() => {}}
                   isFavorited={true}

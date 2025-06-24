@@ -50,26 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
-
-      const data = await response.json();
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-    } catch {
-      throw new Error("Login failed");
+      const response = await authApi.login(credentials);
+      localStorage.setItem(TOKEN_KEY, response.data.token);
+      setToken(response.data.token);
+      setUser(response.data.user);
+      router.push("/dashboard");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Login failed");
+      throw error;
     } finally {
       setIsLoading(false);
     }

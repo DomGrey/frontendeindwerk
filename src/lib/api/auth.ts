@@ -10,7 +10,7 @@ import type {
 
 export const login = async (
   credentials: LoginCredentials
-): Promise<AuthResponse> => {
+): Promise<ApiResponse<AuthResponse>> => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
     headers: getHeaders(),
@@ -27,12 +27,12 @@ export const login = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const register = async (
   credentials: RegisterCredentials
-): Promise<AuthResponse> => {
+): Promise<ApiResponse<AuthResponse>> => {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: getHeaders(),
@@ -49,7 +49,7 @@ export const register = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const logout = async (token: string): Promise<void> => {
@@ -68,7 +68,9 @@ export const logout = async (token: string): Promise<void> => {
   }
 };
 
-export const refreshToken = async (token: string): Promise<AuthResponse> => {
+export const refreshToken = async (
+  token: string
+): Promise<ApiResponse<AuthResponse>> => {
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
     headers: getHeaders(token),
@@ -84,7 +86,7 @@ export const refreshToken = async (token: string): Promise<AuthResponse> => {
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const getMe = async (token: string): Promise<User> => {

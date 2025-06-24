@@ -9,12 +9,7 @@ import type {
 export const getOutfits = async (
   token: string,
   perPage?: number
-): Promise<{
-  outfits: Outfit[];
-  total: number;
-  page: number;
-  pageSize: number;
-}> => {
+): Promise<ApiResponse<Outfit[]>> => {
   const queryParams = new URLSearchParams();
   if (perPage) {
     queryParams.append("per_page", perPage.toString());
@@ -35,23 +30,13 @@ export const getOutfits = async (
     );
   }
 
-  return {
-    outfits: data.data,
-    total: data.meta?.pagination?.total || 0,
-    page: data.meta?.pagination?.page || 1,
-    pageSize: data.meta?.pagination?.pageSize || 10,
-  };
+  return data;
 };
 
 export const searchOutfits = async (
   token: string,
   params: OutfitSearchParams
-): Promise<{
-  outfits: Outfit[];
-  total: number;
-  page: number;
-  pageSize: number;
-}> => {
+): Promise<ApiResponse<Outfit[]>> => {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) {
@@ -76,18 +61,13 @@ export const searchOutfits = async (
     );
   }
 
-  return {
-    outfits: data.data,
-    total: data.meta?.pagination?.total || 0,
-    page: data.meta?.pagination?.page || 1,
-    pageSize: data.meta?.pagination?.pageSize || 10,
-  };
+  return data;
 };
 
 export const createOutfit = async (
   token: string,
   outfitData: CreateOutfitData
-): Promise<Outfit> => {
+): Promise<ApiResponse<Outfit>> => {
   const response = await fetch(`${API_BASE_URL}/outfits`, {
     method: "POST",
     headers: getHeaders(token),
@@ -104,10 +84,13 @@ export const createOutfit = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
-export const getOutfit = async (token: string, id: number): Promise<Outfit> => {
+export const getOutfit = async (
+  token: string,
+  id: number
+): Promise<ApiResponse<Outfit>> => {
   const response = await fetch(`${API_BASE_URL}/outfits/${id}`, {
     headers: getHeaders(token),
   });
@@ -122,14 +105,14 @@ export const getOutfit = async (token: string, id: number): Promise<Outfit> => {
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const updateOutfit = async (
   token: string,
   id: number,
   outfitData: Partial<CreateOutfitData>
-): Promise<Outfit> => {
+): Promise<ApiResponse<Outfit>> => {
   const response = await fetch(`${API_BASE_URL}/outfits/${id}`, {
     method: "PUT",
     headers: getHeaders(token),
@@ -146,7 +129,7 @@ export const updateOutfit = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const deleteOutfit = async (

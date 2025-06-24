@@ -6,12 +6,15 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "laraveleindwerk.ddev.site",
+        port: "",
+        pathname: "/storage/**",
       },
       {
         protocol: "https",
         hostname: "closet-app-su7ez.ondigitalocean.app",
       },
     ],
+    domains: ["laraveleindwerk.ddev.site"],
   },
 };
 

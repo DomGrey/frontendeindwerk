@@ -1,144 +1,251 @@
 // Generic API Response type
 export interface ApiResponse<T> {
-  data: T;
-  error: null | {
-    message: string;
-    code: string;
+  readonly data: T;
+  readonly error: null | {
+    readonly message: string;
+    readonly code: string;
   };
-  meta: null | {
-    pagination?: {
-      total: number;
-      page: number;
-      pageSize: number;
+  readonly meta: null | {
+    readonly pagination?: {
+      readonly total: number;
+      readonly page: number;
+      readonly pageSize: number;
     };
   };
 }
 
 // Auth types
 export interface User {
-  id: number;
-  name: string;
-  email: string;
-  profile_photo_url?: string;
-  created_at: string;
-  updated_at: string;
+  readonly id: number;
+  readonly name: string;
+  readonly email: string;
+  readonly profile_photo_url?: string;
+  readonly created_at: string;
+  readonly updated_at: string;
 }
 
 export interface AuthResponse {
-  data: {
-    token: string;
-    user: User;
+  readonly data: {
+    readonly token: string;
+    readonly user: User;
   };
-  error: null | { message: string; code: string };
-  meta: null;
+  readonly error: null | { readonly message: string; readonly code: string };
+  readonly meta: null;
 }
 
 export interface LoginCredentials {
-  email: string;
-  password: string;
+  readonly email: string;
+  readonly password: string;
 }
 
 export interface RegisterCredentials {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
+  readonly name: string;
+  readonly email: string;
+  readonly password: string;
+  readonly password_confirmation: string;
 }
 
 export interface UpdateProfileData {
-  name?: string;
-  email?: string;
-  password?: string;
-  password_confirmation?: string;
+  readonly name?: string;
+  readonly email?: string;
+  readonly password?: string;
+  readonly password_confirmation?: string;
 }
 
-// Clothing Item types
+// Updated Clothing Item types with extended options
+export type ClothingCategory =
+  | "top"
+  | "bottom"
+  | "dress"
+  | "outerwear"
+  | "shoes"
+  | "accessory"
+  | "sleepwear";
+
+export type ClothingSize =
+  // Letter sizes
+  | "XXS"
+  | "XS"
+  | "S"
+  | "M"
+  | "L"
+  | "XL"
+  | "XXL"
+  | "XXXL"
+  | "One Size"
+  // Number sizes
+  | "32"
+  | "34"
+  | "36"
+  | "38"
+  | "40"
+  | "42"
+  | "44"
+  | "46"
+  | "48"
+  | "50"
+  | "52"
+  | "54"
+  | "56"
+  | "58"
+  | "60";
+
+export type ClothingSeason =
+  | "all-year"
+  | "spring"
+  | "summer"
+  | "fall"
+  | "winter";
+
+export type ItemStatus = "active" | "inactive";
+
 export interface ClothingItem {
-  id: number;
-  name: string;
-  description?: string;
-  category: string;
-  color: string;
-  brand?: string;
-  size: string;
-  season: string;
-  status?: string;
-  image_path?: string;
-  image_url?: string;
-  thumbnail_url?: string;
-  care_label_url?: string;
-  is_public: boolean;
-  user_id: number;
-  created_at: string;
-  updated_at: string;
+  readonly id: number;
+  readonly name: string;
+  readonly description?: string;
+  readonly category: ClothingCategory;
+  readonly color: string;
+  readonly brand?: string;
+  readonly size: ClothingSize;
+  readonly season: ClothingSeason;
+  readonly status?: ItemStatus;
+  readonly image_path?: string;
+  readonly image_url?: string;
+  readonly thumbnail_url?: string;
+  readonly care_label_path?: string;
+  readonly care_label_url?: string;
+  readonly is_public: boolean;
+  readonly user_id: number;
+  readonly user?: User;
+  readonly created_at: string;
+  readonly updated_at: string;
 }
 
 export interface ClothingItemSearchParams {
-  q?: string;
-  category?: string;
-  color?: string;
-  brand?: string;
-  size?: string;
-  season?: string;
-  status?: string;
-  per_page?: number;
+  readonly q?: string;
+  readonly category?: ClothingCategory;
+  readonly color?: string;
+  readonly brand?: string;
+  readonly size?: ClothingSize;
+  readonly season?: ClothingSeason;
+  readonly status?: ItemStatus;
+  readonly per_page?: number;
 }
 
 export interface CreateClothingItemData {
-  name: string;
-  description?: string;
-  category: string;
-  color: string;
-  brand?: string;
-  size: string;
-  season: string;
-  status?: string;
-  is_public: boolean;
-  image?: File;
-  care_label?: File;
+  readonly name: string;
+  readonly description?: string;
+  readonly category: ClothingCategory;
+  readonly color: string;
+  readonly brand?: string;
+  readonly size: ClothingSize;
+  readonly season: ClothingSeason;
+  readonly status?: ItemStatus;
+  readonly is_public: boolean;
+  readonly image?: File;
+  readonly care_label?: File;
+}
+
+// Clothing Item Options
+export interface ClothingItemOptions {
+  readonly categories: readonly ClothingCategory[];
+  readonly sizes: readonly ClothingSize[];
+  readonly seasons: readonly ClothingSeason[];
 }
 
 // Outfit types
 export interface Outfit {
-  id: number;
-  name: string;
-  description?: string;
-  is_public: boolean;
-  user_id: number;
-  clothing_items: ClothingItem[];
-  created_at: string;
-  updated_at: string;
+  readonly id: number;
+  readonly name: string;
+  readonly description?: string;
+  readonly is_public: boolean;
+  readonly user_id: number;
+  readonly user?: User;
+  readonly clothing_items: readonly ClothingItem[];
+  readonly created_at: string;
+  readonly updated_at: string;
 }
 
 export interface OutfitSearchParams {
-  q?: string;
-  contains_item_id?: number;
-  per_page?: number;
+  readonly q?: string;
+  readonly contains_item_id?: number;
+  readonly per_page?: number;
 }
 
 export interface CreateOutfitData {
-  name: string;
-  description?: string;
-  is_public: boolean;
-  clothing_item_ids: number[];
+  readonly name: string;
+  readonly description?: string;
+  readonly is_public: boolean;
+  readonly clothing_item_ids: readonly number[];
 }
 
 // Favorite types
 export type FavoriteType = "clothing_item" | "outfit";
 
+export interface DeletedItem {
+  readonly id: number;
+  readonly status: "deleted";
+  readonly message: string;
+}
+
 export interface Favorite {
-  id: number;
-  user_id: number;
-  favoritable_id: number;
-  favoritable_type: FavoriteType;
-  created_at: string;
-  updated_at: string;
+  readonly id: number;
+  readonly user_id: number;
+  readonly favoritable_id: number;
+  readonly favoritable_type: FavoriteType;
+  readonly favoritable: ClothingItem | Outfit | DeletedItem;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface ClothingItemFavorite
+  extends Omit<Favorite, "favoritable_type" | "favoritable"> {
+  readonly favoritable_type: "clothing_item";
+  readonly favoritable: ClothingItem;
+}
+
+export interface OutfitFavorite
+  extends Omit<Favorite, "favoritable_type" | "favoritable"> {
+  readonly favoritable_type: "outfit";
+  readonly favoritable: Outfit;
+}
+
+export interface DeletedFavorite extends Omit<Favorite, "favoritable"> {
+  readonly favoritable: DeletedItem;
 }
 
 export interface CreateFavoriteData {
-  favoritable_id: number;
-  favoritable_type: FavoriteType;
+  readonly favoritable_id: number;
+  readonly favoritable_type: FavoriteType;
 }
+
+// Type guards
+export const isClothingItemFavorite = (
+  favorite: Favorite
+): favorite is ClothingItemFavorite => {
+  return (
+    favorite.favoritable_type === "clothing_item" &&
+    "name" in favorite.favoritable
+  );
+};
+
+export const isOutfitFavorite = (
+  favorite: Favorite
+): favorite is OutfitFavorite => {
+  return (
+    favorite.favoritable_type === "outfit" &&
+    "clothing_items" in favorite.favoritable
+  );
+};
+
+export const isDeletedFavorite = (
+  favorite: Favorite
+): favorite is DeletedFavorite => {
+  return (
+    "status" in favorite.favoritable &&
+    favorite.favoritable.status === "deleted"
+  );
+};
 
 // File upload requirements
 export const FILE_REQUIREMENTS = {
@@ -147,7 +254,13 @@ export const FILE_REQUIREMENTS = {
 } as const;
 
 export interface OutfitSchedule {
-  id: number;
-  scheduled_date: string;
-  outfit: Outfit;
+  readonly id: number;
+  readonly scheduled_date: string;
+  readonly outfit: Outfit;
 }
+
+// API response types
+export type FavoritesResponse = ApiResponse<readonly Favorite[]>;
+export type ClothingItemsResponse = ApiResponse<readonly ClothingItem[]>;
+export type OutfitsResponse = ApiResponse<readonly Outfit[]>;
+export type ClothingItemOptionsResponse = ApiResponse<ClothingItemOptions>;

@@ -44,13 +44,14 @@ export function DashboardPageClient() {
       if (!token) return;
 
       try {
-        const [clothingRes, outfitsRes, favoritesRes] = await Promise.all([
-          getClothingItems(token),
-          getOutfits(token),
-          getFavorites(token),
-        ]);
+        const [clothingItemsResponse, outfitsResponse, favoritesResponse] =
+          await Promise.all([
+            getClothingItems(token),
+            getOutfits(token),
+            getFavorites(token),
+          ]);
 
-        const allClothingItems: ClothingItem[] = clothingRes;
+        const allClothingItems: ClothingItem[] = clothingItemsResponse.data;
         const sortedItems = [...allClothingItems].sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -58,8 +59,8 @@ export function DashboardPageClient() {
 
         setStats({
           clothing: allClothingItems.length,
-          outfits: outfitsRes.outfits.length,
-          favorites: favoritesRes.length,
+          outfits: outfitsResponse.data.length,
+          favorites: favoritesResponse.data.length,
         });
 
         setRecentItems(sortedItems.slice(0, 4));

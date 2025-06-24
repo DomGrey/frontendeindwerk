@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClothingItem } from "@/lib/types";
+import type { ClothingItem } from "@/lib/types/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,12 @@ interface ClothingItemCardProps {
   onFavorite: (isFavorited: boolean) => void;
   onDelete: () => void;
   isFavorited: boolean;
+}
+
+function getFullImageUrl(path: string | undefined | null): string {
+  if (!path) return "/placeholder.svg";
+  if (path.startsWith("http")) return path;
+  return `https://laraveleindwerk.ddev.site${path}`;
 }
 
 export function ClothingItemCard({
@@ -67,9 +73,9 @@ export function ClothingItemCard({
     <>
       <Card className="group relative overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
         <div className="relative aspect-square overflow-hidden">
-          {item.imageUrl ? (
+          {item.image_url ? (
             <Image
-              src={item.imageUrl}
+              src={getFullImageUrl(item.image_url)}
               alt={item.name}
               fill
               className="object-cover transition-transform group-hover:scale-105"

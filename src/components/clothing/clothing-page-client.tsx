@@ -13,28 +13,22 @@ import {
 } from "@/components/ui/select";
 import { ClothingItemCard } from "@/components/clothing/clothing-item-card";
 import { ClothingItemDialog } from "@/components/clothing/clothing-item-dialog";
-import { ClothingItem } from "@/lib/types";
+import type {
+  ClothingItem,
+  ClothingItemOptions,
+  ClothingCategory,
+  ClothingSeason,
+} from "@/lib/types/api";
 import {
   getClothingItems,
   createClothingItem,
   updateClothingItem,
+  getClothingItemOptions,
 } from "@/lib/api/clothing";
 import { getFavoriteClothingItems } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import { useDebounce } from "@/lib/hooks/use-debounce";
-
-const categories = [
-  "All",
-  "Top",
-  "Bottom",
-  "Dress",
-  "Outerwear",
-  "Shoes",
-  "Accessories",
-];
-const colors = ["All", "Red", "Green", "Blue", "White", "Black", "Yellow"];
-const seasons = ["All", "Spring", "Summer", "Autumn", "Winter"];
 
 export function ClothingPageClient() {
   const { token } = useAuth();
@@ -45,44 +39,56 @@ export function ClothingPageClient() {
   const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({
-    category: "All",
-    color: "All",
-    season: "All",
-  });
+  const [options, setOptions] = useState<ClothingItemOptions | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<{
+    category?: ClothingCategory;
+    color?: string;
+    season?: ClothingSeason;
+  }>({});
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  useEffect(() => {
+    if (!token) return;
+    setOptionsLoading(true);
+    setOptionsError(null);
+    getClothingItemOptions(token)
+      .then((opts) => setOptions(opts))
+      .catch(() => setOptionsError("Failed to load options"))
+      .finally(() => setOptionsLoading(false));
+  }, [token]);
+
+  const fetchFavorites = useCallback(async () => {
+    if (!token) return;
+    const favoritesResponse = await getFavoriteClothingItems(token);
+    let favoritedIdsSet = new Set<number>();
+    if (Array.isArray(favoritesResponse.data)) {
+      favoritedIdsSet = new Set(favoritesResponse.data.map((item) => item.id));
+    }
+    setFavoriteIds(favoritedIdsSet);
+  }, [token]);
 
   const fetchData = useCallback(async () => {
     if (!token) return;
-
     setLoading(true);
     try {
       const searchParams = {
         q: debouncedSearchQuery || undefined,
-        category: filters.category === "All" ? undefined : filters.category,
-        color: filters.color === "All" ? undefined : filters.color,
-        season: filters.season === "All" ? undefined : filters.season,
+        category: filters.category,
+        color: filters.color,
+        season: filters.season,
       };
-
-      const [clothingData, favoritesData] = await Promise.all([
-        getClothingItems(token, searchParams),
-        getFavoriteClothingItems(token),
-      ]);
-
-      setAllItems(clothingData);
-
-      let favoritedIdsSet = new Set<number>();
-      if (Array.isArray(favoritesData)) {
-        favoritedIdsSet = new Set(favoritesData.map((fav) => fav.id));
-      }
-      setFavoriteIds(favoritedIdsSet);
+      const clothingResponse = await getClothingItems(token, searchParams);
+      setAllItems(clothingResponse.data);
+      await fetchFavorites();
     } catch (error) {
       console.error("Failed to fetch clothing items:", error);
       toast.error("Failed to load clothing items.");
     } finally {
       setLoading(false);
     }
-  }, [token, debouncedSearchQuery, filters]);
+  }, [token, debouncedSearchQuery, filters, fetchFavorites]);
 
   useEffect(() => {
     fetchData();
@@ -95,8 +101,14 @@ export function ClothingPageClient() {
     );
   }, [allItems, searchQuery]);
 
-  const handleFilterChange = (filterName: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterName]: value }));
+  const handleFilterChange = (
+    filterName: keyof typeof filters,
+    value: string
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterName]: value === "all" ? undefined : value,
+    }));
   };
 
   const handleAddItemClick = () => {
@@ -184,23 +196,24 @@ export function ClothingPageClient() {
             <Input
               placeholder="Search for items..."
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="flex items-end gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="category-filter">Category</Label>
               <Select
-                value={filters.category}
+                value={filters.category ?? "all"}
                 onValueChange={(value) => handleFilterChange("category", value)}
               >
                 <SelectTrigger id="category-filter">
-                  <SelectValue />
+                  <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  <SelectItem value="all">All</SelectItem>
+                  {options?.categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat}
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -209,34 +222,53 @@ export function ClothingPageClient() {
             <div className="space-y-1.5">
               <Label htmlFor="color-filter">Color</Label>
               <Select
-                value={filters.color}
+                value={filters.color ?? "all"}
                 onValueChange={(value) => handleFilterChange("color", value)}
               >
                 <SelectTrigger id="color-filter">
-                  <SelectValue />
+                  <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  {colors.map((col) => (
-                    <SelectItem key={col} value={col}>
-                      {col}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Black">Black</SelectItem>
+                  <SelectItem value="White">White</SelectItem>
+                  <SelectItem value="Gray">Gray</SelectItem>
+                  <SelectItem value="Blue">Blue</SelectItem>
+                  <SelectItem value="Red">Red</SelectItem>
+                  <SelectItem value="Green">Green</SelectItem>
+                  <SelectItem value="Yellow">Yellow</SelectItem>
+                  <SelectItem value="Purple">Purple</SelectItem>
+                  <SelectItem value="Pink">Pink</SelectItem>
+                  <SelectItem value="Brown">Brown</SelectItem>
+                  <SelectItem value="Orange">Orange</SelectItem>
+                  <SelectItem value="Beige">Beige</SelectItem>
+                  <SelectItem value="Navy">Navy</SelectItem>
+                  <SelectItem value="Burgundy">Burgundy</SelectItem>
+                  <SelectItem value="Teal">Teal</SelectItem>
+                  <SelectItem value="Coral">Coral</SelectItem>
+                  <SelectItem value="Lavender">Lavender</SelectItem>
+                  <SelectItem value="Olive">Olive</SelectItem>
+                  <SelectItem value="Maroon">Maroon</SelectItem>
+                  <SelectItem value="Cream">Cream</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="season-filter">Season</Label>
               <Select
-                value={filters.season}
+                value={filters.season ?? "all"}
                 onValueChange={(value) => handleFilterChange("season", value)}
               >
                 <SelectTrigger id="season-filter">
-                  <SelectValue />
+                  <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  {seasons.map((sea) => (
-                    <SelectItem key={sea} value={sea}>
-                      {sea}
+                  <SelectItem value="all">All</SelectItem>
+                  {options?.seasons.map((season) => (
+                    <SelectItem key={season} value={season}>
+                      {season === "all-year"
+                        ? "All Year"
+                        : season.charAt(0).toUpperCase() + season.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>

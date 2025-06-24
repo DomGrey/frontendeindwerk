@@ -1,7 +1,9 @@
 import { API_BASE_URL, getHeaders, ApiError } from "./config";
 import type { ApiResponse, Favorite, CreateFavoriteData } from "../types/api";
 
-export const getFavorites = async (token: string): Promise<Favorite[]> => {
+export const getFavorites = async (
+  token: string
+): Promise<ApiResponse<Favorite[]>> => {
   const response = await fetch(`${API_BASE_URL}/favorites`, {
     headers: getHeaders(token),
   });
@@ -16,12 +18,12 @@ export const getFavorites = async (token: string): Promise<Favorite[]> => {
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const getFavoriteClothingItems = async (
   token: string
-): Promise<Favorite[]> => {
+): Promise<ApiResponse<Favorite[]>> => {
   const response = await fetch(`${API_BASE_URL}/favorites/clothing-items`, {
     headers: getHeaders(token),
   });
@@ -36,12 +38,12 @@ export const getFavoriteClothingItems = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const getFavoriteOutfits = async (
   token: string
-): Promise<Favorite[]> => {
+): Promise<ApiResponse<Favorite[]>> => {
   const response = await fetch(`${API_BASE_URL}/favorites/outfits`, {
     headers: getHeaders(token),
   });
@@ -56,7 +58,7 @@ export const getFavoriteOutfits = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const addFavorite = async (

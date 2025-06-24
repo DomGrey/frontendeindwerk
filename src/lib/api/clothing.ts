@@ -10,11 +10,15 @@ import type {
   ClothingItemSearchParams,
 } from "../types/api";
 import type { ClothingItem } from "@/lib/types/api";
+import type {
+  ClothingItemOptions,
+  ClothingItemOptionsResponse,
+} from "@/lib/types/api";
 
 export const getClothingItems = async (
   token: string,
   params?: ClothingItemSearchParams
-): Promise<ClothingItem[]> => {
+): Promise<ApiResponse<ClothingItem[]>> => {
   const queryParams = new URLSearchParams();
   let hasParams = false;
 
@@ -44,7 +48,7 @@ export const getClothingItems = async (
     );
   }
 
-  return data.data;
+  return data;
 };
 
 export const createClothingItem = async (
@@ -137,4 +141,21 @@ export const deleteClothingItem = async (
       response.status
     );
   }
+};
+
+export const getClothingItemOptions = async (
+  token: string
+): Promise<ClothingItemOptions> => {
+  const response = await fetch(`${API_BASE_URL}/clothing-items/options`, {
+    headers: getHeaders(token),
+  });
+  const data: ClothingItemOptionsResponse = await response.json();
+  if (!response.ok || data.error) {
+    throw new ApiError(
+      data.error?.message || "Failed to fetch clothing item options",
+      data.error?.code || "OPTIONS_ERROR",
+      response.status
+    );
+  }
+  return data.data;
 };

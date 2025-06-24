@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ClothingItem } from "@/lib/types";
+import type { ClothingItem } from "@/lib/types/api";
 import {
   Dialog,
   DialogContent,

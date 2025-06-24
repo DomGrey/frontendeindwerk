@@ -23,14 +23,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ClothingItem } from "@/lib/types";
+import type { ClothingItem, ClothingItemOptions } from "@/lib/types/api";
+import { useAuth } from "@/lib/context/auth-context";
+import { getClothingItemOptions } from "@/lib/api/clothing";
 
 const clothingItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   category: z.string().min(1, "Category is required"),
   color: z.string().min(1, "Color is required"),
   brand: z.string().optional(),
-  sizeType: z.string().min(1, "Size type is required"),
   size: z.string().min(1, "Size is required"),
   season: z.string().min(1, "Season is required"),
   description: z.string().optional(),
@@ -44,55 +45,6 @@ interface ClothingItemFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
 }
-
-const categories = [
-  "Top",
-  "Bottom",
-  "Dress",
-  "Outerwear",
-  "Shoes",
-  "Accessories",
-  "Underwear",
-  "Sleepwear",
-];
-
-const sizeTypes = [
-  { value: "letter", label: "Letter (S, M, L, XL)" },
-  { value: "number", label: "Number (36, 38, 40, 42)" },
-  { value: "custom", label: "Custom Size" },
-];
-
-const letterSizes = [
-  "XXS",
-  "XS",
-  "S",
-  "M",
-  "L",
-  "XL",
-  "XXL",
-  "XXXL",
-  "One Size",
-];
-
-const numberSizes = [
-  "32",
-  "34",
-  "36",
-  "38",
-  "40",
-  "42",
-  "44",
-  "46",
-  "48",
-  "50",
-  "52",
-  "54",
-  "56",
-  "58",
-  "60",
-];
-
-const seasons = ["All-Year", "Spring", "Summer", "Autumn", "Winter"];
 
 const colors = [
   "Black",
@@ -123,11 +75,14 @@ export function ClothingItemForm({
   onCancel,
   isSubmitting,
 }: ClothingItemFormProps) {
+  const { token } = useAuth();
   const [image, setImage] = useState<File | string | null>(
-    item?.imageUrl || null
+    item?.image_url || null
   );
   const [careLabel, setCareLabel] = useState<File | string | null>(null);
-  const [sizeType, setSizeType] = useState<string>("letter");
+  const [options, setOptions] = useState<ClothingItemOptions | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
 
   const form = useForm<ClothingItemFormData>({
     resolver: zodResolver(clothingItemSchema),
@@ -136,7 +91,6 @@ export function ClothingItemForm({
       category: item?.category || "",
       color: item?.color || "",
       brand: item?.brand || "",
-      sizeType: "letter",
       size: item?.size || "",
       season: item?.season || "All-Year",
       description: "",
@@ -145,32 +99,28 @@ export function ClothingItemForm({
 
   useEffect(() => {
     if (item) {
-      // Determine size type from existing size
-      let detectedSizeType = "letter";
-      if (item.size && /^\d+$/.test(item.size)) {
-        detectedSizeType = "number";
-      } else if (
-        item.size &&
-        !letterSizes.includes(item.size) &&
-        !numberSizes.includes(item.size)
-      ) {
-        detectedSizeType = "custom";
-      }
-
-      setSizeType(detectedSizeType);
       form.reset({
         name: item.name,
         category: item.category,
         color: item.color,
         brand: item.brand || "",
-        sizeType: detectedSizeType,
         size: item.size,
         season: item.season || "All-Year",
         description: "",
       });
-      setImage(item.imageUrl || null);
+      setImage(item.image_url || null);
     }
   }, [item, form]);
+
+  useEffect(() => {
+    if (!token) return;
+    setOptionsLoading(true);
+    setOptionsError(null);
+    getClothingItemOptions(token)
+      .then((opts) => setOptions(opts))
+      .catch((err) => setOptionsError("Failed to load options"))
+      .finally(() => setOptionsLoading(false));
+  }, [token]);
 
   const handleSubmit = (data: ClothingItemFormData) => {
     const formData = new FormData();
@@ -190,12 +140,6 @@ export function ClothingItemForm({
     }
 
     onSubmit(formData);
-  };
-
-  const handleSizeTypeChange = (newSizeType: string) => {
-    setSizeType(newSizeType);
-    form.setValue("sizeType", newSizeType);
-    form.setValue("size", ""); // Reset size when type changes
   };
 
   return (
@@ -238,18 +182,28 @@ export function ClothingItemForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                  {optionsLoading ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
                     </SelectItem>
-                  ))}
+                  ) : optionsError ? (
+                    <SelectItem value="__error__" disabled>
+                      Error loading options
+                    </SelectItem>
+                  ) : (
+                    options?.categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -263,7 +217,7 @@ export function ClothingItemForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Color</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select color" />
@@ -302,18 +256,30 @@ export function ClothingItemForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Season</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select season" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {seasons.map((season) => (
-                    <SelectItem key={season} value={season}>
-                      {season}
+                  {optionsLoading ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
                     </SelectItem>
-                  ))}
+                  ) : optionsError ? (
+                    <SelectItem value="__error__" disabled>
+                      Error loading options
+                    </SelectItem>
+                  ) : (
+                    options?.seasons.map((season) => (
+                      <SelectItem key={season} value={season}>
+                        {season === "all-year"
+                          ? "All Year"
+                          : season.charAt(0).toUpperCase() + season.slice(1)}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -321,78 +287,40 @@ export function ClothingItemForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="sizeType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Size Type</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handleSizeTypeChange(value);
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select size type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {sizeTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+        <FormField
+          control={form.control}
+          name="size"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Size</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select size" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {optionsLoading ? (
+                    <SelectItem value="__loading__" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : optionsError ? (
+                    <SelectItem value="__error__" disabled>
+                      Error loading options
+                    </SelectItem>
+                  ) : (
+                    options?.sizes.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="size"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Size</FormLabel>
-                {sizeType === "custom" ? (
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., 10.5, 28x32, Custom"
-                      {...field}
-                      autoComplete="off"
-                    />
-                  </FormControl>
-                ) : (
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {(sizeType === "number" ? numberSizes : letterSizes).map(
-                        (size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

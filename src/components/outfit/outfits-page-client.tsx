@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import type { Outfit } from "@/lib/types/api";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { Favorite } from "@/lib/types/api";
+import type { ApiResponse } from "@/lib/types/api";
 
 export function OutfitsPageClient() {
   const { token } = useAuth();
@@ -46,19 +47,19 @@ export function OutfitsPageClient() {
       if (!token) return;
       setLoading(true);
 
-      const [outfitsResponse, favoritesData] = await Promise.all([
+      const [outfitsResponse, favoritesResponse] = await Promise.all([
         debouncedSearchQuery
           ? searchOutfits(token, { q: debouncedSearchQuery })
           : getOutfits(token),
         getFavoriteOutfits(token),
       ]);
 
-      setOutfits(outfitsResponse.outfits.map(transformApiOutfit));
+      setOutfits(outfitsResponse.data.map(transformApiOutfit));
 
       let favoritedIdsSet = new Set<number>();
-      if (Array.isArray(favoritesData)) {
+      if (Array.isArray(favoritesResponse.data)) {
         favoritedIdsSet = new Set(
-          favoritesData
+          favoritesResponse.data
             .map((favorite: Favorite) => favorite.favoritable_id || favorite.id)
             .filter(Boolean)
         );
@@ -115,34 +116,41 @@ export function OutfitsPageClient() {
 
     setIsSubmitting(true);
     try {
-      let newOrUpdatedOutfit: Outfit;
+      let newOrUpdatedOutfitResponse: ApiResponse<Outfit>;
       if (selectedOutfit) {
         // Update existing outfit
-        newOrUpdatedOutfit = await updateOutfit(token, selectedOutfit.id, {
-          name: data.name,
-          description: data.description,
-          is_public: false,
-          clothing_item_ids: data.clothing_item_ids,
-        });
+        newOrUpdatedOutfitResponse = await updateOutfit(
+          token,
+          selectedOutfit.id,
+          {
+            name: data.name,
+            description: data.description,
+            is_public: false,
+            clothing_item_ids: data.clothing_item_ids,
+          }
+        );
 
         setOutfits(
           outfits.map((it) =>
             it.id === selectedOutfit.id
-              ? transformApiOutfit(newOrUpdatedOutfit)
+              ? transformApiOutfit(newOrUpdatedOutfitResponse.data)
               : it
           )
         );
         toast.success("Outfit updated successfully");
       } else {
         // Create new outfit
-        newOrUpdatedOutfit = await createOutfit(token, {
+        newOrUpdatedOutfitResponse = await createOutfit(token, {
           name: data.name,
           description: data.description,
           is_public: false,
           clothing_item_ids: data.clothing_item_ids,
         });
 
-        setOutfits((prev) => [...prev, transformApiOutfit(newOrUpdatedOutfit)]);
+        setOutfits((prev) => [
+          ...prev,
+          transformApiOutfit(newOrUpdatedOutfitResponse.data),
+        ]);
         toast.success("Outfit created successfully");
       }
       setDialogOpen(false);
