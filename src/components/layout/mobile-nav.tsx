@@ -12,6 +12,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard" },
@@ -24,9 +25,10 @@ const navigation = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" className="md:hidden">
           <span className="sr-only">Open menu</span>
@@ -65,6 +67,7 @@ export function MobileNav() {
                   ? "text-primary"
                   : "text-muted-foreground"
               )}
+              onClick={() => setOpen(false)}
             >
               {item.name}
             </Link>
