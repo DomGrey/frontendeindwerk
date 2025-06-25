@@ -55,7 +55,6 @@ export function FavoritesPageClient() {
           (fav) => fav.favoritable_id !== id || fav.favoritable_type !== type
         )
       );
-      toast.success("Removed from favorites");
     } catch (error) {
       console.error("Failed to remove favorite:", error);
       toast.error("Failed to remove from favorites");

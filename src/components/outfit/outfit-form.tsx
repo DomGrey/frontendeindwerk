@@ -62,6 +62,7 @@ export function OutfitForm({
     Array.from(outfit?.clothing_items || [])
   );
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   const form = useForm<OutfitFormData>({
     resolver: zodResolver(outfitSchema),
@@ -275,23 +276,36 @@ export function OutfitForm({
           <DialogHeader>
             <DialogTitle>Select Clothing Items</DialogTitle>
           </DialogHeader>
+          <Input
+            placeholder="Search clothing items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mb-4"
+          />
           <div className="grid gap-2">
-            {availableItems.map((item) => {
-              const isSelected = selectedItems.some(
-                (selected) => selected.id === item.id
-              );
-              return (
-                <Card
-                  key={item.id}
-                  className={`cursor-pointer transition-colors ${
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  onClick={() => handleItemToggle(item)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-3">
+            {availableItems
+              .filter((item) =>
+                [item.name, item.brand, item.category]
+                  .filter((val): val is string => Boolean(val))
+                  .some((val) =>
+                    val.toLowerCase().includes(search.toLowerCase())
+                  )
+              )
+              .map((item) => {
+                const isSelected = selectedItems.some(
+                  (selected) => selected.id === item.id
+                );
+                return (
+                  <Card
+                    key={item.id}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    onClick={() => handleItemToggle(item)}
+                  >
+                    <CardContent className="flex items-center gap-3 p-4">
                       <div className="w-12 h-12 bg-muted rounded border flex items-center justify-center">
                         {item.image_url ? (
                           <Image
@@ -302,9 +316,13 @@ export function OutfitForm({
                             className="rounded-md object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
-                            No image
-                          </div>
+                          <Image
+                            src="/placeholder.svg"
+                            alt="No image"
+                            width={48}
+                            height={48}
+                            className="rounded-md object-cover bg-muted border"
+                          />
                         )}
                       </div>
                       <div className="flex-1">
@@ -325,21 +343,19 @@ export function OutfitForm({
                           <div className="w-2 h-2 bg-primary-foreground rounded-full" />
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowItemSelector(false)}
-            >
-              Done
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowItemSelector(false)}
+            className="mt-4"
+          >
+            Done
+          </Button>
         </DialogContent>
       </Dialog>
     </>

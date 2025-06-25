@@ -188,6 +188,10 @@ export function OutfitsPageClient() {
       newSet.delete(outfitId);
       return newSet;
     });
+    if (selectedOutfit && selectedOutfit.id === outfitId) {
+      setDialogOpen(false);
+      setSelectedOutfit(undefined);
+    }
   };
 
   const openAddDialog = () => {
@@ -219,7 +223,10 @@ export function OutfitsPageClient() {
           : filteredOutfits.map((outfit) => (
               <div
                 key={outfit.id}
-                onClick={() => openEditDialog(outfit)}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("button")) return;
+                  openEditDialog(outfit);
+                }}
                 className="cursor-pointer"
               >
                 <OutfitCard

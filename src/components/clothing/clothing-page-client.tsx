@@ -168,6 +168,10 @@ export function ClothingPageClient() {
 
   const handleDeleteItem = (itemId: number) => {
     setAllItems((prev) => prev.filter((item) => item.id !== itemId));
+    if (selectedItem && selectedItem.id === itemId) {
+      setDialogOpen(false);
+      setSelectedItem(undefined);
+    }
   };
 
   return (
@@ -255,7 +259,10 @@ export function ClothingPageClient() {
           : filteredItems.map((item) => (
               <div
                 key={item.id}
-                onClick={() => handleEditItemClick(item)}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("button")) return;
+                  handleEditItemClick(item);
+                }}
                 className="cursor-pointer"
               >
                 <ClothingItemCard
