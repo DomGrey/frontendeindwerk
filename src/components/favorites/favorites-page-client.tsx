@@ -6,23 +6,16 @@ import { OutfitCard } from "@/components/outfit/outfit-card";
 import { getFavorites, removeFavorite } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
-import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import type { Favorite } from "@/lib/types/api";
-import {
-  isClothingItemFavorite,
-  isOutfitFavorite,
-  isDeletedFavorite,
-} from "@/lib/types/api";
+import { isClothingItemFavorite, isOutfitFavorite } from "@/lib/types/api";
 
 export function FavoritesPageClient() {
   const { token } = useAuth();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
     const fetchFavorites = async () => {
