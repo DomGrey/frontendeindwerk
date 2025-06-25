@@ -49,9 +49,9 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left">
         <SheetHeader>
-          <SheetTitle>Virtual Closet</SheetTitle>
+          <SheetTitle>Your Closet</SheetTitle>
           <SheetDescription className="sr-only">
-            Main navigation for the Virtual Closet app.
+            Main navigation for the Your Closet app.
           </SheetDescription>
         </SheetHeader>
         <nav className="flex flex-col space-y-4 mt-4 pl-4">

@@ -9,7 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Virtual Closet",
+  title: "Your Closet",
   description: "Manage your clothing and outfits",
 };
 

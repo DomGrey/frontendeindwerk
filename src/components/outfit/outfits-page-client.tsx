@@ -18,6 +18,7 @@ import type { Outfit } from "@/lib/types/api";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { Favorite } from "@/lib/types/api";
 import type { ApiResponse } from "@/lib/types/api";
+import CardSkeleton from "@/components/ui/card-skeleton";
 
 export function OutfitsPageClient() {
   const { token } = useAuth();
@@ -214,18 +215,7 @@ export function OutfitsPageClient() {
       </div>
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-lg border bg-card text-card-foreground shadow animate-pulse"
-              >
-                <div className="aspect-[4/3] bg-muted" />
-                <div className="p-6">
-                  <div className="h-4 w-2/3 bg-muted rounded mb-2" />
-                  <div className="h-3 w-1/2 bg-muted rounded" />
-                </div>
-              </div>
-            ))
+          ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
           : filteredOutfits.map((outfit) => (
               <div
                 key={outfit.id}

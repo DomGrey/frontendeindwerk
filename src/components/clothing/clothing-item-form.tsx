@@ -26,6 +26,7 @@ import * as z from "zod";
 import type { ClothingItem, ClothingItemOptions } from "@/lib/types/api";
 import { useAuth } from "@/lib/context/auth-context";
 import { getClothingItemOptions } from "@/lib/api/clothing";
+import { CLOTHING_COLORS } from "@/lib/constants/colors";
 
 const clothingItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -45,29 +46,6 @@ interface ClothingItemFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
 }
-
-const colors = [
-  "Black",
-  "White",
-  "Gray",
-  "Blue",
-  "Red",
-  "Green",
-  "Yellow",
-  "Purple",
-  "Pink",
-  "Brown",
-  "Orange",
-  "Beige",
-  "Navy",
-  "Burgundy",
-  "Teal",
-  "Coral",
-  "Lavender",
-  "Olive",
-  "Maroon",
-  "Cream",
-];
 
 export function ClothingItemForm({
   item,
@@ -92,7 +70,7 @@ export function ClothingItemForm({
       color: item?.color || "",
       brand: item?.brand || "",
       size: item?.size || "",
-      season: item?.season || "All-Year",
+      season: item?.season || "all-year",
       description: "",
     },
   });
@@ -224,7 +202,7 @@ export function ClothingItemForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {colors.map((color) => (
+                  {CLOTHING_COLORS.map((color) => (
                     <SelectItem key={color} value={color}>
                       {color}
                     </SelectItem>

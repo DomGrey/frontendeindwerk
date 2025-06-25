@@ -201,9 +201,13 @@ export function OutfitForm({
                                 className="rounded-md object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center">
-                                No image
-                              </div>
+                              <Image
+                                src="/placeholder.svg"
+                                alt="No image"
+                                width={40}
+                                height={40}
+                                className="rounded-md object-cover bg-muted border"
+                              />
                             )}
                           </div>
                           <div className="space-y-1">

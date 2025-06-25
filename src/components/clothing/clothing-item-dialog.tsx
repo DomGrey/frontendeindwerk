@@ -43,7 +43,7 @@ export function ClothingItemDialog({
           <DialogDescription>
             {item
               ? "Update the details of your clothing item."
-              : "Add a new item to your virtual closet."}
+              : "Add a new item to Your Closet."}
           </DialogDescription>
         </DialogHeader>
         <ClothingItemForm

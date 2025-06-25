@@ -29,6 +29,8 @@ import { getFavoriteClothingItems } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "react-toastify";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import CardSkeleton from "@/components/ui/card-skeleton";
+import { CLOTHING_COLORS } from "@/lib/constants/colors";
 
 export function ClothingPageClient() {
   const { token } = useAuth();
@@ -214,26 +216,11 @@ export function ClothingPageClient() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Black">Black</SelectItem>
-                  <SelectItem value="White">White</SelectItem>
-                  <SelectItem value="Gray">Gray</SelectItem>
-                  <SelectItem value="Blue">Blue</SelectItem>
-                  <SelectItem value="Red">Red</SelectItem>
-                  <SelectItem value="Green">Green</SelectItem>
-                  <SelectItem value="Yellow">Yellow</SelectItem>
-                  <SelectItem value="Purple">Purple</SelectItem>
-                  <SelectItem value="Pink">Pink</SelectItem>
-                  <SelectItem value="Brown">Brown</SelectItem>
-                  <SelectItem value="Orange">Orange</SelectItem>
-                  <SelectItem value="Beige">Beige</SelectItem>
-                  <SelectItem value="Navy">Navy</SelectItem>
-                  <SelectItem value="Burgundy">Burgundy</SelectItem>
-                  <SelectItem value="Teal">Teal</SelectItem>
-                  <SelectItem value="Coral">Coral</SelectItem>
-                  <SelectItem value="Lavender">Lavender</SelectItem>
-                  <SelectItem value="Olive">Olive</SelectItem>
-                  <SelectItem value="Maroon">Maroon</SelectItem>
-                  <SelectItem value="Cream">Cream</SelectItem>
+                  {CLOTHING_COLORS.map((color) => (
+                    <SelectItem key={color} value={color}>
+                      {color.charAt(0).toUpperCase() + color.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -262,28 +249,26 @@ export function ClothingPageClient() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center">Loading...</div>
-      ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => handleEditItemClick(item)}
-              className="cursor-pointer"
-            >
-              <ClothingItemCard
-                item={item}
-                onFavorite={(isFavorited) =>
-                  handleToggleFavorite(item.id, isFavorited)
-                }
-                onDelete={() => handleDeleteItem(item.id)}
-                isFavorited={favoriteIds.has(item.id)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+          : filteredItems.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => handleEditItemClick(item)}
+                className="cursor-pointer"
+              >
+                <ClothingItemCard
+                  item={item}
+                  onFavorite={(isFavorited) =>
+                    handleToggleFavorite(item.id, isFavorited)
+                  }
+                  onDelete={() => handleDeleteItem(item.id)}
+                  isFavorited={favoriteIds.has(item.id)}
+                />
+              </div>
+            ))}
+      </div>
 
       <ClothingItemDialog
         open={isDialogOpen}

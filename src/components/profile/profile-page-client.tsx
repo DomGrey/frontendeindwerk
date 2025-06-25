@@ -62,7 +62,7 @@ export function ProfilePageClient() {
               <div>
                 <h3 className="font-medium">Profile Visibility</h3>
                 <p className="text-sm text-muted-foreground">
-                  Control who can see your virtual closet
+                  Control who can see Your Closet
                 </p>
               </div>
               <Button variant="outline">Private</Button>

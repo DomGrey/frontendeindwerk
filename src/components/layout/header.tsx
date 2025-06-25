@@ -12,7 +12,7 @@ export function Header() {
         </div>
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="flex items-center space-x-2 mr-6">
-            <h1 className="text-xl font-bold">Virtual Closet</h1>
+            <h1 className="text-xl font-bold">Your Closet</h1>
           </Link>
           <Navigation />
         </div>
