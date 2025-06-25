@@ -10,14 +10,15 @@ import type {
 
 export const login = async (
   credentials: LoginCredentials
-): Promise<ApiResponse<AuthResponse>> => {
+): Promise<ApiResponse<{ token: string; user: User }>> => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(credentials),
   });
 
-  const data: ApiResponse<AuthResponse> = await response.json();
+  const data: ApiResponse<{ token: string; user: User }> =
+    await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
@@ -32,14 +33,15 @@ export const login = async (
 
 export const register = async (
   credentials: RegisterCredentials
-): Promise<ApiResponse<AuthResponse>> => {
+): Promise<ApiResponse<{ token: string; user: User }>> => {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(credentials),
   });
 
-  const data: ApiResponse<AuthResponse> = await response.json();
+  const data: ApiResponse<{ token: string; user: User }> =
+    await response.json();
 
   if (!response.ok || data.error) {
     throw new ApiError(
