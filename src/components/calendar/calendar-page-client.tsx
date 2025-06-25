@@ -5,6 +5,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { OutfitCard } from "@/components/outfit/outfit-card";
+import { Card } from "@/components/ui/card";
 import { CalendarCheck2 } from "lucide-react";
 
 import { useAuth } from "@/lib/context/auth-context";
@@ -32,24 +33,15 @@ export function CalendarPageClient() {
   const fetchSchedules = useCallback(
     async (month: Date) => {
       if (!token) return;
-
       const startDate = format(startOfMonth(month), "yyyy-MM-dd");
       const endDate = format(endOfMonth(month), "yyyy-MM-dd");
-
       try {
         const apiSchedules = await getOutfitSchedules(
           token,
           startDate,
           endDate
         );
-
-        console.log("Raw API response:", apiSchedules);
-
-        if (!apiSchedules || !Array.isArray(apiSchedules)) {
-          console.warn("Invalid schedules data received:", apiSchedules);
-          return;
-        }
-
+        if (!apiSchedules || !Array.isArray(apiSchedules)) return;
         const newSchedules = apiSchedules.reduce((acc, apiSchedule) => {
           const schedule = toOutfitSchedule(apiSchedule);
           const key = schedule.scheduled_date.slice(0, 10);
@@ -57,11 +49,7 @@ export function CalendarPageClient() {
           return acc;
         }, {} as Record<string, OutfitSchedule>);
         setSchedules((prev) => ({ ...prev, ...newSchedules }));
-      } catch (error) {
-        console.error("Failed to fetch schedules:", error);
-        if (error instanceof Error) {
-          console.error("Error details:", error.message);
-        }
+      } catch {
         toast.error("Could not load outfit schedules.");
       }
     },
@@ -74,7 +62,6 @@ export function CalendarPageClient() {
 
   const handleUnschedule = async () => {
     if (!token || !selectedSchedule) return;
-
     try {
       await unscheduleOutfit(token, selectedSchedule.id);
       setSchedules((prev) => {
@@ -83,8 +70,7 @@ export function CalendarPageClient() {
         return newSchedules;
       });
       toast.success("Outfit unscheduled successfully.");
-    } catch (error) {
-      console.error("Failed to unschedule outfit:", error);
+    } catch {
       toast.error("Could not unschedule outfit.");
     }
   };
@@ -95,60 +81,58 @@ export function CalendarPageClient() {
   });
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-2">Outfit Calendar</h1>
-      <h2 className="text-2xl font-semibold mb-8">
-        Planned for {date ? format(date, "MMMM d, yyyy") : "..."}
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-        <div className="md:col-span-1 flex flex-col items-start">
-          <div className="rounded-lg border bg-white shadow-sm w-full">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              className="p-3"
-              modifiers={{ scheduled: scheduledDays }}
-              modifiersClassNames={{
-                scheduled: "calendar-day-scheduled",
-              }}
-            />
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <div className="rounded-lg border p-8 min-h-[320px] flex items-center justify-center bg-white shadow-sm">
-            {selectedSchedule ? (
-              <div className="w-full max-w-sm flex flex-col items-center gap-2">
+    <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-bold">Outfit Calendar</h1>
+        <h2 className="text-xl font-medium text-muted-foreground mt-1">
+          Planned for {date ? format(date, "MMMM d, yyyy") : "..."}
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <Card className="p-4 flex flex-col items-start min-h-[420px]">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
+            className="w-full"
+            modifiers={{ scheduled: scheduledDays }}
+            modifiersClassNames={{ scheduled: "calendar-day-scheduled" }}
+          />
+        </Card>
+        <Card className="p-6 flex items-center justify-center">
+          {selectedSchedule ? (
+            <div className="w-full max-w-lg mx-auto flex flex-col items-center">
+              <div className="w-full">
                 <OutfitCard
                   outfit={selectedSchedule.outfit}
                   isFavorited={false}
                   onFavorite={() => {}}
                   onDelete={() => {}}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleUnschedule}
-                  className="mt-2"
-                >
-                  Remove
-                </Button>
               </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <CalendarCheck2 className="w-10 h-10 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground mb-4">
-                  No outfit planned for this date.
-                </p>
-                <Button onClick={() => setPlanDialogOpen(true)}>
-                  Plan an Outfit
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUnschedule}
+                className="mt-4 mx-auto"
+              >
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <CalendarCheck2 className="w-10 h-10 text-muted-foreground mb-2" />
+              <p className="text-muted-foreground mb-4">
+                No outfit planned for this date.
+              </p>
+              <Button onClick={() => setPlanDialogOpen(true)}>
+                Plan an Outfit
+              </Button>
+            </div>
+          )}
+        </Card>
       </div>
       <PlanOutfitDialog
         open={planDialogOpen}
