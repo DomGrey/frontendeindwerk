@@ -81,9 +81,12 @@ export function ClothingItemCard({
               className="object-cover transition-transform group-hover:scale-105"
             />
           ) : (
-            <div className="h-full w-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No image</span>
-            </div>
+            <Image
+              src="/placeholder.svg"
+              alt="No image"
+              fill
+              className="object-cover transition-transform group-hover:scale-105 bg-muted"
+            />
           )}
 
           <div className="absolute right-2 top-2 z-10 flex flex-col items-center gap-2">
